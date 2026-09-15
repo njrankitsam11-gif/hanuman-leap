@@ -1,4 +1,4 @@
-import type { Chapter } from "./types";
+import type { Chapter, ChapterId } from "./types";
 import { VERSES } from "./verses";
 
 export * from "./types";
@@ -102,6 +102,28 @@ export const CHAPTERS = [
     verse: VERSES.lankini,
   },
   {
+    id: "vibhishana",
+    title: { hi: "विभीषण मिलन", en: "Vibhishana's House" },
+    intro: {
+      hi: "रात की लंका में गली-गली राक्षसों के घर हैं। एक घर अलग है — तुलसी के झुंड और राम-नाम से अंकित। वही द्वार खुला है।",
+      en: "Lanka's streets by night are lined with rakshasa houses. One stands apart — marked with Tulsi and the name of Ram. Only that door is open.",
+    },
+    caption: {
+      hi: "तुलसी और राम-नाम वाला द्वार ही खुला है — बाकी दीवार हैं।",
+      en: "Only the door with Tulsi and Ram-naam is open — the rest are wall.",
+    },
+    goal: { kind: "passes", count: 7 },
+    difficulty: { speed: 0.49, spawn: 1.35, gap: 0.33, gapMin: GAP_MIN },
+    roster: [
+      ["house", 3],
+      ["rakshasa", 1],
+    ],
+    sky: "night",
+    scoreMul: 1.7,
+    verse: VERSES.vibhishana,
+    introVerse: VERSES.harimandir,
+  },
+  {
     id: "vatika",
     title: { hi: "अशोक वाटिका", en: "Ashok Vatika" },
     intro: {
@@ -118,6 +140,28 @@ export const CHAPTERS = [
     sky: "night",
     scoreMul: 1.8,
     verse: VERSES.ring,
+  },
+  {
+    id: "vidhvans",
+    title: { hi: "वाटिका विध्वंस", en: "The Garden Torn" },
+    intro: {
+      hi: "सीता की आज्ञा पाकर हनुमान फल खाते हैं और वृक्ष उखाड़ने लगते हैं। रखवाले भागते हैं — फिर मेघनाद ब्रह्मास्त्र साधता है।",
+      en: "With Sita's leave, Hanuman eats the fruit and starts uprooting trees. The guards flee — then Meghnad readies the Brahmastra.",
+    },
+    caption: {
+      hi: "वृक्षों को तोड़ें — पुण्य मिलेगा। बाणों की बौछार से बचें।",
+      en: "Tear down the trees for punya. Dodge the volleys of arrows.",
+    },
+    goal: { kind: "finale", passes: 8, scene: "capture" },
+    difficulty: { speed: 0.5, spawn: 1.35, gap: 0.34, gapMin: GAP_MIN },
+    roster: [
+      ["vriksha", 3],
+      ["astra", 2],
+    ],
+    sky: "morning",
+    scoreMul: 2,
+    verse: VERSES.brahmastra,
+    introVerse: VERSES.vidhvans,
   },
   {
     id: "dahan",
@@ -184,7 +228,10 @@ export const ENDLESS: Chapter = {
     ["surasa", 2],
     ["simhika", 2],
     ["rakshasa", 2],
-    ["tree", 2],
+    ["house", 1],
+    ["tree", 1],
+    ["vriksha", 2],
+    ["astra", 1],
     ["tower", 1],
   ],
   sky: "day",
@@ -193,6 +240,9 @@ export const ENDLESS: Chapter = {
 };
 
 export const ENDLESS_INDEX = CHAPTER_COUNT;
+
+/** Index of a story chapter by id (tests and migrations address chapters by name). */
+export const chapterIndex = (id: ChapterId): number => CHAPTERS.findIndex((c) => c.id === id);
 
 export const chapterAt = (i: number): Chapter =>
   i === ENDLESS_INDEX ? ENDLESS : (CHAPTERS[i] ?? CHAPTERS[0]);

@@ -263,6 +263,130 @@ function drawTree(ctx: Ctx, o: Obstacle, vp: Viewport) {
   puffs(ctx, o, o.gapY + o.gapH + 2, "#4f7d35", 16);
 }
 
+/**
+ * A house on Vibhishana's street. The open door (the gap) is marked with a Tulsi
+ * plant and राम; painted doorways elsewhere on the wall are decoys.
+ */
+function drawHouse(ctx: Ctx, o: Obstacle, vp: Viewport, t: number) {
+  const k = KINDS.house;
+  const sea = vp.h - vp.seaH;
+  columnBody(ctx, o, vp, k.top, k.bottom);
+  // brick courses
+  ctx.fillStyle = "rgba(0,0,0,0.14)";
+  for (let y = 10; y < sea; y += 22) ctx.fillRect(o.x + 4, y, o.w - 8, 3);
+  // decoy doorways: dark arches on solid wall
+  for (const dy of o.decoys ?? []) {
+    const y = dy * vp.h;
+    ctx.fillStyle = "#2a1408";
+    ctx.beginPath();
+    ctx.moveTo(o.x + 18, y + 28);
+    ctx.lineTo(o.x + 18, y);
+    ctx.arc(o.x + o.w / 2, y, o.w / 2 - 18, Math.PI, 0);
+    ctx.lineTo(o.x + o.w - 18, y + 28);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // lintel and threshold of the real door
+  ctx.fillStyle = "#e9c265";
+  ctx.fillRect(o.x - 4, o.gapY - 10, o.w + 8, 10);
+  ctx.fillRect(o.x - 4, o.gapY + o.gapH, o.w + 8, 8);
+  // Tulsi in a pot on the threshold
+  const px = o.x + o.w / 2;
+  const py = o.gapY + o.gapH;
+  ctx.fillStyle = "#b8552a";
+  ctx.fillRect(px - 8, py - 12, 16, 12);
+  ctx.fillStyle = "#3d8a3a";
+  for (const [dx, dyy, r] of [
+    [0, -22, 8],
+    [-8, -16, 6],
+    [8, -16, 6],
+  ] as const) {
+    ctx.beginPath();
+    ctx.arc(px + dx, py + dyy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // राम on the lintel, glowing softly
+  const pulse = 0.75 + 0.25 * Math.sin(t * 3);
+  ctx.fillStyle = `rgba(255, 245, 200, ${pulse})`;
+  ctx.font = '700 15px "Noto Sans Devanagari", system-ui, sans-serif';
+  ctx.textAlign = "center";
+  ctx.fillText("राम", px, o.gapY - 16);
+}
+
+/** An Ashoka vriksha: standing, or torn down by the hero. */
+function drawVriksha(ctx: Ctx, o: Obstacle, vp: Viewport) {
+  if (!o.smashed) return drawTree(ctx, o, vp);
+  const sea = vp.h - vp.seaH;
+  // broken trunk stump and a scatter of leaves on the ground
+  const tx = o.x + o.w * 0.3;
+  const tw = o.w * 0.4;
+  ctx.fillStyle = "#4a3018";
+  ctx.fillRect(tx, sea - 40, tw, 40);
+  ctx.fillStyle = "#6b4a2b";
+  ctx.beginPath();
+  ctx.moveTo(tx, sea - 40);
+  ctx.lineTo(tx + tw * 0.3, sea - 58);
+  ctx.lineTo(tx + tw * 0.6, sea - 44);
+  ctx.lineTo(tx + tw, sea - 52);
+  ctx.lineTo(tx + tw, sea - 40);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(61, 106, 42, 0.8)";
+  for (const [dx, r] of [
+    [-20, 9],
+    [6, 12],
+    [30, 8],
+    [52, 10],
+  ] as const) {
+    ctx.beginPath();
+    ctx.ellipse(o.x + o.w / 2 + dx, sea - 6, r, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/** Meghnad's volley: a curtain of golden arrows above and below the opening. */
+function drawAstra(ctx: Ctx, o: Obstacle, vp: Viewport, t: number) {
+  const sea = vp.h - vp.seaH;
+  const shaft = (x: number, y0: number, y1: number, down: boolean) => {
+    ctx.strokeStyle = "#e9c265";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y0);
+    ctx.lineTo(x, y1);
+    ctx.stroke();
+    // head at the gap edge, fletching at the far end
+    const tip = down ? y1 : y0;
+    const dir = down ? 1 : -1;
+    ctx.fillStyle = "#fff0b0";
+    ctx.beginPath();
+    ctx.moveTo(x, tip + dir * 8);
+    ctx.lineTo(x - 5, tip - dir * 4);
+    ctx.lineTo(x + 5, tip - dir * 4);
+    ctx.closePath();
+    ctx.fill();
+    const tail = down ? y0 : y1;
+    ctx.strokeStyle = "#c4501b";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, tail);
+    ctx.lineTo(x - 6, tail - dir * 10);
+    ctx.moveTo(x, tail);
+    ctx.lineTo(x + 6, tail - dir * 10);
+    ctx.stroke();
+  };
+  const n = 4;
+  for (let i = 0; i < n; i++) {
+    const x = o.x + 12 + (i * (o.w - 24)) / (n - 1);
+    const wobble = Math.sin(t * 7 + i) * 3;
+    shaft(x, -20, o.gapY - 8 + wobble, true);
+    shaft(x, o.gapY + o.gapH + 8 - wobble, sea + 20, false);
+  }
+  // heat shimmer where the volley is densest
+  ctx.fillStyle = "rgba(255, 215, 94, 0.12)";
+  ctx.fillRect(o.x, 0, o.w, o.gapY);
+  ctx.fillRect(o.x, o.gapY + o.gapH, o.w, sea - o.gapY - o.gapH);
+}
+
 /** Golden tower with battlements and flames at the cut. */
 function drawTower(ctx: Ctx, o: Obstacle, vp: Viewport, t: number) {
   const k = KINDS.tower;
@@ -315,8 +439,14 @@ export function drawObstacle(ctx: Ctx, o: Obstacle, world: World, vp: Viewport) 
       return;
     case "lankini":
       return drawLankini(ctx, o, vp);
+    case "house":
+      return drawHouse(ctx, o, vp, world.t);
     case "tree":
       return drawTree(ctx, o, vp);
+    case "vriksha":
+      return drawVriksha(ctx, o, vp);
+    case "astra":
+      return drawAstra(ctx, o, vp, world.t);
     case "tower":
       return drawTower(ctx, o, vp, world.t);
   }
@@ -347,6 +477,7 @@ export function drawObstacleFx(ctx: Ctx, o: Obstacle, world: World, vp: Viewport
 
 /** Obstacle name, drawn in an un-mirrored pass so text reads correctly on the way home. */
 export function drawObstacleLabel(ctx: Ctx, o: Obstacle, vp: Viewport, mirror: boolean) {
+  if (o.smashed) return;
   const cx = o.x + o.w / 2;
   const x = mirror ? vp.w - cx : cx;
   const y = o.kind === "mainaka" ? Math.max(20, o.gapH - 44) : Math.max(20, o.gapY - 24);

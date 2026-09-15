@@ -505,6 +505,14 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
             haptic("collect");
             award({ type: "collect" });
             break;
+          case "smash":
+            setPunya(ev.punya);
+            burst(fxRef.current, "leaf", ev.x, ev.y, 22);
+            burst(fxRef.current, "spark", ev.x, ev.y, 6);
+            playSfx("smash");
+            haptic("collect");
+            award({ type: "smash" });
+            break;
           case "hit": {
             hitFx(fxRef.current);
             overAtRef.current = now;

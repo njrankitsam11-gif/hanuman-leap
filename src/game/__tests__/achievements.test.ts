@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ACHIEVEMENTS, evaluate, type AchievementCtx } from "../achievements";
-import { chapterAt, ENDLESS_INDEX } from "../chapters";
+import { chapterAt, chapterIndex, ENDLESS_INDEX } from "../chapters";
 import { CANON_LANDSCAPE } from "../constants";
 import { createWorld, startChapter } from "../engine";
 import { computeViewport } from "../viewport";
@@ -47,12 +47,14 @@ describe("achievements", () => {
       evaluate(ctx({ event: { type: "pass", kind: "surasa" } }), new Set(["first_leap"])),
     ).toEqual(["surasa_pass"]);
     expect(evaluate(ctx({ event: { type: "collect" } }), new Set())).toEqual(["mainaka_touch"]);
-    expect(evaluate(ctx({ event: { type: "clear" }, chapter: 5 }), new Set())).toEqual([
-      "flawless_chapter",
-      "ring_delivered",
-    ]);
     expect(
-      evaluate(ctx({ event: { type: "clear" }, chapter: 6, chapterDeaths: 2 }), new Set()),
+      evaluate(ctx({ event: { type: "clear" }, chapter: chapterIndex("vatika") }), new Set()),
+    ).toEqual(["flawless_chapter", "ring_delivered"]);
+    expect(
+      evaluate(
+        ctx({ event: { type: "clear" }, chapter: chapterIndex("dahan"), chapterDeaths: 2 }),
+        new Set(),
+      ),
     ).toEqual(["lanka_burned"]);
   });
 

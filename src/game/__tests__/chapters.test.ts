@@ -14,14 +14,16 @@ import { ENDLESS_DAY, endlessSky } from "../render/sky";
 import { KINDS } from "../kinds";
 
 describe("chapter data", () => {
-  it("has eight chapters in Sundarkand order, ending on the return", () => {
+  it("has ten chapters in Sundarkand order, ending on the return", () => {
     expect(CHAPTERS.map((c) => c.id)).toEqual([
       "prelude",
       "mainaka",
       "surasa",
       "simhika",
       "lankini",
+      "vibhishana",
       "vatika",
+      "vidhvans",
       "dahan",
       "return",
     ]);

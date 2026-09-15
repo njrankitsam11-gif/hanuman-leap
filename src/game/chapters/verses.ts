@@ -3,7 +3,9 @@ import type { Verse } from "./types";
 /**
  * Tulsidas, Ramcharitmanas, Sundarkand. Devanagari text was checked line-by-line
  * against two Gita Press-derived sources (drikpanchang.com and
- * shrirammitramandal.com) on 2026-09-15. Chaupai refs use the Gita Press convention
+ * shrirammitramandal.com) on 2026-09-15 (harimandir, vibhishana, vidhvans and
+ * brahmastra added the same day; where the two sources differ on a single word —
+ * हरष/हरषि, तेहि/तेहिं — the Gita Press reading is used). Chaupai refs use the Gita Press convention
  * "N.M" = M-th chaupai after doha N−1. Transliteration is IAST-style; meanings (English and
  * Hindi भावार्थ) are short renderings, not literal glosses.
  */
@@ -68,6 +70,27 @@ export const VERSES = {
       "महाकपि ने एक मुक्का मारा तो वह खून उगलती हुई धरती पर लुढ़क गई। फिर लंकिनी सँभलकर उठी और भयभीत होकर हाथ जोड़ विनती करने लगी।",
     verified: true,
   },
+  /** Hanuman finds a house apart from the rest, with a temple of Hari — before doha 5. */
+  harimandir: {
+    ref: "चौपाई 5.8",
+    devanagari: "भवन एक पुनि दीख सुहावा। हरि मंदिर तहँ भिन्न बनावा॥",
+    transliteration: "Bhavana eka puni dīkha suhāvā, Hari mandira taham̐ bhinna banāvā.",
+    meaning: "Then he saw one lovely house, and there, set apart, a temple of Hari.",
+    meaningHi: "फिर उन्होंने एक सुंदर भवन देखा; वहाँ अलग से हरि का मंदिर बना था।",
+    verified: true,
+  },
+  vibhishana: {
+    ref: "दोहा 5 · चौपाई 6.1",
+    devanagari:
+      "रामायुध अंकित गृह सोभा बरनि न जाइ।\nनव तुलसिका बृंद तहँ देखि हरष कपिराइ॥\nलंका निसिचर निकर निवासा। इहाँ कहाँ सज्जन कर बासा॥",
+    transliteration:
+      "Rāmāyudha aṅkita gṛha sobhā barani na jāi,\nnava tulasikā bṛnda taham̐ dekhi haraṣa kapirāi.\nLaṅkā nisicara nikara nivāsā, ihām̐ kahām̐ sajjana kara bāsā.",
+    meaning:
+      'The house was marked with Ram\'s weapons — its beauty beyond telling; seeing clusters of young Tulsi there, the monkey chief rejoiced. "Lanka is the home of hordes of demons — how could a good man live here?"',
+    meaningHi:
+      'घर राम के आयुधों के चिह्नों से अंकित था — उसकी शोभा कही नहीं जाती; वहाँ नई तुलसी के झुंड देखकर कपिराज हर्षित हुए। "लंका तो निशाचरों के समूह का निवास है — यहाँ सज्जन का वास कहाँ?"',
+    verified: true,
+  },
   ring: {
     ref: "सोरठा 12 · चौपाई 13.1",
     devanagari:
@@ -78,6 +101,31 @@ export const VERSES = {
       "Having thought it over, Hanuman dropped the ring — as if the Ashoka tree had given her a burning ember; she rose in joy and took it in her hand. Then she saw the lovely ring, beautifully engraved with the name of Ram.",
     meaningHi:
       "हनुमान ने मन में विचार कर मुद्रिका गिरा दी — मानो अशोक वृक्ष ने अंगारा दिया हो; सीता हर्षित होकर उठीं और उसे हाथ में ले लिया। तब उन्होंने राम-नाम अंकित वह मनोहर, अति सुंदर मुद्रिका देखी।",
+    verified: true,
+  },
+  /** Sita's leave to eat the fruit, and the garden torn up — doha 17, chaupais after it. */
+  vidhvans: {
+    ref: "चौपाई 18.1–18.2",
+    devanagari:
+      "चलेउ नाइ सिरु पैठेउ बागा। फल खाएसि तरु तोरैं लागा॥\nरहे तहाँ बहु भट रखवारे। कछु मारेसि कछु जाइ पुकारे॥",
+    transliteration:
+      "Caleu nāi siru paiṭheu bāgā, phala khāesi taru toraiṁ lāgā;\nrahe tahām̐ bahu bhaṭa rakhavāre, kachu māresi kachu jāi pukāre.",
+    meaning:
+      "Bowing his head he went and entered the garden; he ate the fruit and began tearing down the trees. Many warriors kept guard there — some he struck down, some ran off crying for help.",
+    meaningHi:
+      "सिर नवाकर वे चले और बाग में घुस गए; फल खाए और वृक्ष तोड़ने लगे। वहाँ बहुत-से योद्धा रखवाले थे — कुछ को मार डाला, कुछ जाकर पुकार मचाने लगे।",
+    verified: true,
+  },
+  brahmastra: {
+    ref: "दोहा 19",
+    devanagari:
+      "ब्रह्म अस्त्र तेहि साँधा कपि मन कीन्ह बिचार।\nजौं न ब्रह्मसर मानउँ महिमा मिटइ अपार॥",
+    transliteration:
+      "Brahma astra tehi sām̐dhā kapi mana kīnha bicāra,\njauṁ na brahmasara mānauṁ mahimā miṭai apāra.",
+    meaning:
+      'He aimed the Brahmastra; Hanuman thought to himself: "If I do not honour Brahma\'s arrow, its boundless glory is undone."',
+    meaningHi:
+      'उसने ब्रह्मास्त्र साधा; कपि ने मन में विचार किया — "यदि मैं ब्रह्मबाण को न मानूँ, तो उसकी अपार महिमा मिट जाएगी।"',
     verified: true,
   },
   dahan: {

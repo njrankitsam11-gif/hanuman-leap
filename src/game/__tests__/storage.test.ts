@@ -22,10 +22,10 @@ describe("migrate", () => {
     expect(migrate(null, () => ({ ...DEFAULT_SAVE, lang: "hi" })).lang).toBe("hi");
   });
 
-  it("carries v1 progress and preferences into v2", () => {
+  it("carries v1 progress and preferences forward", () => {
     const v1: SaveV1 = { v: 1, best: 420, muted: true, unlockedChapter: 3 };
     const s = migrate(v1);
-    expect(s.v).toBe(2);
+    expect(s.v).toBe(3);
     expect(s.best).toBe(420);
     expect(s.muted).toBe(true);
     expect(s.unlockedChapter).toBe(3);
@@ -37,7 +37,37 @@ describe("migrate", () => {
     expect(migrate({ v: 1, best: 0, muted: false, unlockedChapter: 0 }).hinted).toBe(false);
   });
 
-  it("passes a valid v2 through and back-fills fields added since", () => {
+  it("remaps v2 chapter indices onto the ten-chapter arc", () => {
+    // v2: 0 prelude … 4 lankini, 5 vatika, 6 dahan, 7 return
+    const v2 = {
+      ...DEFAULT_SAVE,
+      v: 2,
+      unlockedChapter: 6,
+      stats: {
+        ...DEFAULT_STATS,
+        chapters: [
+          { clears: 1, deaths: 0 },
+          { clears: 0, deaths: 0 },
+          { clears: 0, deaths: 0 },
+          { clears: 0, deaths: 0 },
+          { clears: 0, deaths: 0 },
+          { clears: 2, deaths: 3 },
+          { clears: 0, deaths: 5 },
+        ],
+      },
+    };
+    const s = migrate(v2);
+    expect(s.v).toBe(3);
+    expect(s.unlockedChapter).toBe(8); // dahan moved from 6 to 8
+    expect(s.stats.chapters[6]).toEqual({ clears: 2, deaths: 3 }); // vatika 5 → 6
+    expect(s.stats.chapters[8]).toEqual({ clears: 0, deaths: 5 }); // dahan 6 → 8
+    expect(s.stats.chapters[5]).toEqual({ clears: 0, deaths: 0 }); // vibhishana: fresh
+    expect(migrate({ ...DEFAULT_SAVE, v: 2, unlockedChapter: 7 }).unlockedChapter).toBe(9);
+    expect(migrate({ ...DEFAULT_SAVE, v: 2, unlockedChapter: 4 }).unlockedChapter).toBe(4);
+    expect(migrate({ v: 1, best: 1, muted: false, unlockedChapter: 5 }).unlockedChapter).toBe(6);
+  });
+
+  it("passes a valid v3 through and back-fills fields added since", () => {
     const early = { ...DEFAULT_SAVE, best: 7, stats: { runs: 2 } } as Record<string, unknown>;
     delete early["endlessBest"];
     delete early["daily"];

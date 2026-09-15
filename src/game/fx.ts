@@ -6,7 +6,7 @@ import type { Viewport, World } from "./types";
  * Particle positions live in flow space so the mirrored return leg just works.
  */
 
-export type ParticleKind = "spark" | "sparkle" | "ember" | "flame";
+export type ParticleKind = "spark" | "sparkle" | "ember" | "flame" | "leaf";
 
 export type Particle = {
   kind: ParticleKind;
@@ -180,6 +180,7 @@ const COLORS: Record<ParticleKind, (a: number) => string> = {
   sparkle: (a) => `rgba(255, 240, 180, ${a})`,
   ember: (a) => `rgba(255, 140, 40, ${a})`,
   flame: (a) => `rgba(255, ${120 + Math.round(100 * a)}, 40, ${a})`,
+  leaf: (a) => `rgba(${90 + Math.round(60 * a)}, 150, 60, ${a})`,
 };
 
 /** Particles only; flash/shake/wipe are applied by the renderer around the world pass. */

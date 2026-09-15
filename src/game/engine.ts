@@ -14,7 +14,14 @@ import {
 } from "./constants";
 import { KINDS } from "./kinds";
 import { MECHANICS, resetChapterEffects } from "./mechanics";
-import { BEHAVIOURS, COLLECT_PUNYA, columnCollide, gapMul, heroHitbox } from "./obstacles/registry";
+import {
+  BEHAVIOURS,
+  COLLECT_PUNYA,
+  columnCollide,
+  gapMul,
+  heroHitbox,
+  SMASH_PUNYA,
+} from "./obstacles/registry";
 import type { GameEvent, Input, Obstacle, Viewport, World } from "./types";
 
 /**
@@ -49,6 +56,7 @@ export function createWorld(vp: Viewport, rng: () => number = Math.random): Worl
     chapter: 0,
     passes: 0,
     leaps: 0,
+    smashes: 0,
     punya: 0,
     punyaAtChapterStart: 0,
     bossSpawned: false,
@@ -68,6 +76,7 @@ export function createWorld(vp: Viewport, rng: () => number = Math.random): Worl
 export function startChapter(world: World, index: number, vp: Viewport) {
   world.chapter = index;
   world.passes = 0;
+  world.smashes = 0;
   world.obstacles = [];
   world.spawnTimer = 0;
   world.punyaAtChapterStart = world.punya;
@@ -258,6 +267,10 @@ export function step(world: World, input: Input, dt: number, vp: Viewport): Game
       if (result === "collect") {
         world.punya += COLLECT_PUNYA;
         events.push({ type: "collect", punya: world.punya });
+      } else if (result === "smash") {
+        world.punya += SMASH_PUNYA;
+        world.smashes += 1;
+        events.push({ type: "smash", punya: world.punya, x: o.x + o.w / 2, y: hero.y });
       }
     }
   }

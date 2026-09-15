@@ -4,7 +4,8 @@
  * before that is a silent no-op, as is everything on the server.
  */
 
-export type SfxName = "flap" | "pass" | "collect" | "hit" | "shrink" | "chapter" | "win" | "fire";
+export type SfxName =
+  "flap" | "pass" | "collect" | "smash" | "hit" | "shrink" | "chapter" | "win" | "fire";
 export type AmbienceName = "fire" | null;
 
 type AudioWindow = Window & { webkitAudioContext?: typeof AudioContext };
@@ -139,6 +140,12 @@ export function playSfx(name: SfxName) {
       for (const [i, f] of [1200, 1600, 2000].entries()) {
         tone(ac, out, "sine", f, f, t + i * 0.07, 0.12, 0.1);
       }
+      return;
+    case "smash":
+      // a woody crack and a rustle of leaves
+      noiseBurst(ac, out, t, 0.08, 0.3, { type: "bandpass", f0: 1800, f1: 500, q: 1.2 });
+      tone(ac, out, "triangle", 220, 140, t, 0.12, 0.12);
+      noiseBurst(ac, out, t + 0.06, 0.25, 0.1, { type: "highpass", f0: 3000, f1: 5000 });
       return;
     case "hit":
       tone(ac, out, "sine", 90, 40, t, 0.25, 0.4);

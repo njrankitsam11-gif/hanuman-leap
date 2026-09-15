@@ -10,7 +10,9 @@ export type AchievementId =
   | "surasa_pass"
   | "flawless_chapter"
   | "lankini_gate"
+  | "sajjan_home"
   | "ring_delivered"
+  | "vriksha_10"
   | "lanka_burned"
   | "chudamani"
   | "nirvighna"
@@ -54,9 +56,19 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     desc: { hi: "लंका के द्वार की रक्षिका को पार किया", en: "Passed the guardian of Lanka's gate" },
   },
   {
+    id: "sajjan_home",
+    title: { hi: "सज्जन का घर", en: "A Good Man's House" },
+    desc: { hi: "विभीषण का द्वार पहचाना", en: "Found Vibhishana's door in Lanka" },
+  },
+  {
     id: "ring_delivered",
     title: { hi: "मुद्रिका", en: "The Ring" },
     desc: { hi: "सीता माँ तक राम की मुद्रिका पहुँचाई", en: "Delivered Ram's ring to Sita Maa" },
+  },
+  {
+    id: "vriksha_10",
+    title: { hi: "दस वृक्ष", en: "Ten Trees" },
+    desc: { hi: "एक ही बार में दस वृक्ष उखाड़े", en: "Tore down ten trees in one visit" },
   },
   {
     id: "lanka_burned",
@@ -111,6 +123,7 @@ export const achievementById = (id: string): Achievement | undefined =>
 export type AchievementEvent =
   | { type: "pass"; kind: ObstacleKindId }
   | { type: "collect" }
+  | { type: "smash" }
   | { type: "clear" }
   | { type: "won" }
   | { type: "hit" };
@@ -146,8 +159,12 @@ export function evaluate(ctx: AchievementCtx, unlocked: ReadonlySet<string>): Ac
     case "collect":
       add("mainaka_touch", true);
       break;
+    case "smash":
+      add("vriksha_10", world.smashes >= 10);
+      break;
     case "clear":
       add("flawless_chapter", !inEndless && ctx.chapterDeaths === 0);
+      add("sajjan_home", chapter.id === "vibhishana");
       add("ring_delivered", chapter.id === "vatika");
       add("lanka_burned", chapter.id === "dahan");
       break;

@@ -72,7 +72,16 @@ export type SaveV2 = {
   achievements: string[];
 };
 
-export type Save = SaveV2;
+/**
+ * v3 (2026-09-15): two chapters were inserted into the arc (Vibhishana at 5,
+ * Vatika-vidhvans at 7), so chapter indices in a v2 save must be remapped.
+ */
+export type SaveV3 = Omit<SaveV2, "v"> & { v: 3 };
+
+/** Old story index → new story index. */
+const V2_TO_V3_CHAPTER = [0, 1, 2, 3, 4, 6, 8, 9] as const;
+
+export type Save = SaveV3;
 
 export const DEFAULT_STATS: Stats = {
   runs: 0,
@@ -83,8 +92,8 @@ export const DEFAULT_STATS: Stats = {
   chapters: [],
 };
 
-export const DEFAULT_SAVE: SaveV2 = {
-  v: 2,
+export const DEFAULT_SAVE: SaveV3 = {
+  v: 3,
   best: 0,
   unlockedChapter: 0,
   muted: false,
@@ -108,11 +117,11 @@ function isV1(x: unknown): x is SaveV1 {
   return s["v"] === 1 && isNum(s["best"]) && isBool(s["muted"]) && isNum(s["unlockedChapter"]);
 }
 
-function isV2(x: unknown): x is SaveV2 {
+function isV2Shape(x: unknown, v: 2 | 3): boolean {
   if (typeof x !== "object" || x === null) return false;
   const s = x as Record<string, unknown>;
   return (
-    s["v"] === 2 &&
+    s["v"] === v &&
     isNum(s["best"]) &&
     isNum(s["unlockedChapter"]) &&
     isBool(s["muted"]) &&
@@ -125,6 +134,36 @@ function isV2(x: unknown): x is SaveV2 {
     // fields added later (endlessBest, daily, achievements) are back-filled by migrate
   );
 }
+const isV2 = (x: unknown): x is SaveV2 => isV2Shape(x, 2);
+const isV3 = (x: unknown): x is SaveV3 => isV2Shape(x, 3);
+
+/** Fill in fields a v2/v3 record may predate. */
+function backfill(raw: SaveV2 | SaveV3): SaveV3 {
+  const merged: SaveV3 = {
+    ...DEFAULT_SAVE,
+    ...raw,
+    v: 3,
+    stats: { ...DEFAULT_STATS, ...raw.stats },
+  };
+  if (!Array.isArray(merged.achievements)) merged.achievements = [];
+  if (typeof merged.daily?.best !== "number") merged.daily = { date: "", best: 0 };
+  return merged;
+}
+
+/** Move v2 chapter indices (8-chapter arc) onto the 10-chapter arc. */
+export function remapChaptersV2(save: SaveV2): SaveV3 {
+  const s = backfill(save);
+  const map = (i: number) => V2_TO_V3_CHAPTER[Math.max(0, Math.min(7, i))] ?? 0;
+  const chapters: Stats["chapters"] = [];
+  save.stats.chapters?.forEach((c, i) => {
+    if (i < V2_TO_V3_CHAPTER.length) {
+      const j = map(i);
+      while (chapters.length <= j) chapters.push({ clears: 0, deaths: 0 });
+      chapters[j] = c;
+    }
+  });
+  return { ...s, unlockedChapter: map(save.unlockedChapter), stats: { ...s.stats, chapters } };
+}
 
 /** The preferred UI language for a fresh save: Hindi when the browser says so. */
 export function detectLang(): Lang {
@@ -134,19 +173,15 @@ export function detectLang(): Lang {
 }
 
 /** Bring any stored shape up to the current version; unknown shapes become the default. */
-export function migrate(raw: unknown, fresh: () => SaveV2 = () => DEFAULT_SAVE): SaveV2 {
-  if (isV2(raw)) {
-    const merged: SaveV2 = { ...DEFAULT_SAVE, ...raw, stats: { ...DEFAULT_STATS, ...raw.stats } };
-    if (!Array.isArray(merged.achievements)) merged.achievements = [];
-    if (typeof merged.daily?.best !== "number") merged.daily = { date: "", best: 0 };
-    return merged;
-  }
+export function migrate(raw: unknown, fresh: () => SaveV3 = () => DEFAULT_SAVE): SaveV3 {
+  if (isV3(raw)) return backfill(raw);
+  if (isV2(raw)) return remapChaptersV2(raw);
   if (isV1(raw)) {
     return {
       ...fresh(),
       best: raw.best,
       muted: raw.muted,
-      unlockedChapter: raw.unlockedChapter,
+      unlockedChapter: V2_TO_V3_CHAPTER[Math.max(0, Math.min(7, raw.unlockedChapter))] ?? 0,
       // a returning player has seen plenty of taps already
       hinted: raw.best > 0 || raw.unlockedChapter > 0,
     };
@@ -154,9 +189,9 @@ export function migrate(raw: unknown, fresh: () => SaveV2 = () => DEFAULT_SAVE):
   return fresh();
 }
 
-const freshSave = (): SaveV2 => ({ ...DEFAULT_SAVE, lang: detectLang() });
+const freshSave = (): SaveV3 => ({ ...DEFAULT_SAVE, lang: detectLang() });
 
-export function loadSave(): SaveV2 {
+export function loadSave(): SaveV3 {
   if (typeof window === "undefined") return DEFAULT_SAVE;
   try {
     const raw = window.localStorage.getItem(KEY);
@@ -167,7 +202,7 @@ export function loadSave(): SaveV2 {
   }
 }
 
-function write(next: SaveV2) {
+function write(next: SaveV3) {
   if (typeof window === "undefined") return;
   const json = JSON.stringify(next);
   try {
@@ -179,24 +214,24 @@ function write(next: SaveV2) {
 }
 
 /** Shallow-merge a patch into the stored save and return the result. */
-export function saveGame(patch: Partial<Omit<SaveV2, "v" | "stats">>): SaveV2 {
-  const next: SaveV2 = { ...loadSave(), ...patch, v: 2 };
+export function saveGame(patch: Partial<Omit<SaveV3, "v" | "stats">>): SaveV3 {
+  const next: SaveV3 = { ...loadSave(), ...patch, v: 3 };
   write(next);
   return next;
 }
 
 /** Apply a stats update against the stored record and return the new save. */
-export function updateStats(fn: (stats: Stats) => Stats): SaveV2 {
+export function updateStats(fn: (stats: Stats) => Stats): SaveV3 {
   const cur = loadSave();
-  const next: SaveV2 = { ...cur, stats: fn({ ...cur.stats, chapters: [...cur.stats.chapters] }) };
+  const next: SaveV3 = { ...cur, stats: fn({ ...cur.stats, chapters: [...cur.stats.chapters] }) };
   write(next);
   return next;
 }
 
 /** Forget progress and stats; keep preferences (sound, haptics, language, easy). */
-export function resetProgress(): SaveV2 {
+export function resetProgress(): SaveV3 {
   const cur = loadSave();
-  const next: SaveV2 = {
+  const next: SaveV3 = {
     ...cur,
     best: 0,
     unlockedChapter: 0,

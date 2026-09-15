@@ -142,15 +142,75 @@ function drawRamScene(ctx: Ctx, world: World, vp: Viewport) {
   ctx.fill();
 }
 
+/** Brahmastra window (seconds into the finale): the arrow streaks in, then coils bind. */
+const ASTRA_FROM = 0.9;
+const ASTRA_HIT = 1.5;
+
+/** The world darkens to gold as Meghnad's astra is loosed. */
+function drawCaptureScene(ctx: Ctx, world: World, vp: Viewport) {
+  const p = progress(world);
+  ctx.fillStyle = `rgba(120, 70, 10, ${0.35 * p})`;
+  ctx.fillRect(0, 0, vp.w, vp.h);
+}
+
+/** The astra in flight, then golden coils around the hero. */
+function drawCapture(ctx: Ctx, world: World, vp: Viewport, heroX: number) {
+  const t = world.finaleT;
+  if (t < ASTRA_FROM) return;
+  if (t < ASTRA_HIT) {
+    const k = easeOut(clamp01((t - ASTRA_FROM) / (ASTRA_HIT - ASTRA_FROM)));
+    const x = vp.w + 60 + (heroX + 20 - (vp.w + 60)) * k;
+    const y = world.y - 40 + 40 * k;
+    ctx.strokeStyle = "#ffd75e";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(x + 70, y - 12);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.fillStyle = "#fff0b0";
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y);
+    ctx.lineTo(x + 6, y - 7);
+    ctx.lineTo(x + 6, y + 7);
+    ctx.closePath();
+    ctx.fill();
+    return;
+  }
+  const k = clamp01((t - ASTRA_HIT) / 0.6);
+  const glow = ctx.createRadialGradient(heroX, world.y, 6, heroX, world.y, 90);
+  glow.addColorStop(0, `rgba(255, 220, 120, ${0.5 * k})`);
+  glow.addColorStop(1, "rgba(255, 220, 120, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(heroX, world.y, 90, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(255, 215, 94, ${0.9 * k})`;
+  ctx.lineWidth = 5;
+  for (let i = 0; i < 4; i++) {
+    const rx = 48 - i * 4;
+    const ry = 12 + i * 2;
+    ctx.beginPath();
+    ctx.ellipse(heroX, world.y - 18 + i * 12, rx * k, ry, -0.25, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
 /** Set piece behind the hero. */
 export function drawScene(ctx: Ctx, world: World, vp: Viewport, ch: Chapter) {
   if (!isSceneActive(world, ch) || ch.goal.kind !== "finale") return;
-  if (ch.goal.scene === "sita") drawSitaScene(ctx, world, vp);
-  else drawRamScene(ctx, world, vp);
+  switch (ch.goal.scene) {
+    case "sita":
+      return drawSitaScene(ctx, world, vp);
+    case "ram":
+      return drawRamScene(ctx, world, vp);
+    case "capture":
+      return drawCaptureScene(ctx, world, vp);
+  }
 }
 
 /** Parts that must sit above the hero. */
 export function drawSceneFront(ctx: Ctx, world: World, vp: Viewport, ch: Chapter, heroX: number) {
   if (!isSceneActive(world, ch) || ch.goal.kind !== "finale") return;
   if (ch.goal.scene === "sita") drawRing(ctx, world, vp, heroX);
+  if (ch.goal.scene === "capture") drawCapture(ctx, world, vp, heroX);
 }

@@ -1,5 +1,16 @@
 export type ObstacleKindId =
-  "cloud" | "wave" | "mainaka" | "surasa" | "simhika" | "rakshasa" | "lankini" | "tree" | "tower";
+  | "cloud"
+  | "wave"
+  | "mainaka"
+  | "surasa"
+  | "simhika"
+  | "rakshasa"
+  | "lankini"
+  | "house"
+  | "tree"
+  | "vriksha"
+  | "astra"
+  | "tower";
 
 export type SkyId = "morning" | "day" | "dusk" | "night" | "fire" | "dawn";
 
@@ -23,7 +34,7 @@ export type ChapterGoal =
   /** Spawn `after` sentries from the roster, then one boss; clearing the boss completes the chapter. */
   | { kind: "boss"; after: number }
   /** After `passes`, spawning stops and a scripted scene plays before the chapter clears. */
-  | { kind: "finale"; passes: number; scene: "sita" | "ram" }
+  | { kind: "finale"; passes: number; scene: "sita" | "ram" | "capture" }
   /** Never clears; the run ends only on a hit. Difficulty ramps with passes. */
   | { kind: "endless" };
 
@@ -33,7 +44,9 @@ export type ChapterId =
   | "surasa"
   | "simhika"
   | "lankini"
+  | "vibhishana"
   | "vatika"
+  | "vidhvans"
   | "dahan"
   | "return"
   | "endless";
