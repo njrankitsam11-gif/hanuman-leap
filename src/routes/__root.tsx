@@ -97,11 +97,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "A one-tap flying game through eight chapters of the Sundarkand, with Tulsidas's verses.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "/og.jpg" },
+      { property: "og:image", content: "https://hanuman-leap.vercel.app/og.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "/og.jpg" },
+      { name: "twitter:image", content: "https://hanuman-leap.vercel.app/og.jpg" },
     ],
     links: [
       {

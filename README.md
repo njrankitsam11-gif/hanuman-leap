@@ -1,5 +1,7 @@
 # Hanuman's Leap to Lanka
 
+**Play it: https://hanuman-leap.vercel.app**
+
 A one-tap flying game (Flappy Bird style) that retells the **Sundarkand** — Hanuman's
 leap across the sea to find Sita, the burning of Lanka, and the return to Ram — in
 eight chapters, each closing with a verse from Tulsidas's *Ramcharitmanas*.
