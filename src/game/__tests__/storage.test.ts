@@ -37,10 +37,17 @@ describe("migrate", () => {
     expect(migrate({ v: 1, best: 0, muted: false, unlockedChapter: 0 }).hinted).toBe(false);
   });
 
-  it("passes a valid v2 through and back-fills missing stats fields", () => {
-    const s = migrate({ ...DEFAULT_SAVE, best: 7, stats: { runs: 2 } });
+  it("passes a valid v2 through and back-fills fields added since", () => {
+    const early = { ...DEFAULT_SAVE, best: 7, stats: { runs: 2 } } as Record<string, unknown>;
+    delete early["endlessBest"];
+    delete early["daily"];
+    delete early["achievements"];
+    const s = migrate(early);
     expect(s.best).toBe(7);
     expect(s.stats).toEqual({ ...DEFAULT_STATS, runs: 2 });
+    expect(s.endlessBest).toBe(0);
+    expect(s.daily).toEqual({ date: "", best: 0 });
+    expect(s.achievements).toEqual([]);
   });
 });
 

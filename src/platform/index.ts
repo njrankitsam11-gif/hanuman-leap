@@ -15,6 +15,8 @@ export type Platform = {
   exitApp: () => void;
   /** Called once the first frame is on screen (hides a native splash screen). */
   ready: () => void;
+  /** Native share sheet; undefined means "use the Web Share API / clipboard". */
+  share?: (data: { title: string; text: string; url: string }) => Promise<boolean>;
 };
 
 const web: Platform = {

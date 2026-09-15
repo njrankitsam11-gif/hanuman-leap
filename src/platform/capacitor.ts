@@ -6,6 +6,7 @@ import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
 import { Preferences } from "@capacitor/preferences";
+import { Share } from "@capacitor/share";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { setHapticBackend, type HapticName } from "@/game/haptics";
@@ -59,5 +60,15 @@ export async function installCapacitor(): Promise<void> {
     },
     exitApp: () => quiet(App.exitApp()),
     ready: () => quiet(SplashScreen.hide()),
+    share: native
+      ? async (data) => {
+          try {
+            await Share.share({ title: data.title, text: data.text, url: data.url });
+            return true;
+          } catch {
+            return false; // dismissed or unavailable
+          }
+        }
+      : undefined,
   });
 }

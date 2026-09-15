@@ -64,6 +64,12 @@ export type SaveV2 = {
   /** The first-run hint has been shown. */
   hinted: boolean;
   stats: Stats;
+  /** Best punya in Endless Flight. */
+  endlessBest: number;
+  /** Best punya in today's Daily Leap (date is the IST day key). */
+  daily: { date: string; best: number };
+  /** Unlocked achievement ids, in unlock order. */
+  achievements: string[];
 };
 
 export type Save = SaveV2;
@@ -87,6 +93,9 @@ export const DEFAULT_SAVE: SaveV2 = {
   easy: false,
   hinted: false,
   stats: DEFAULT_STATS,
+  endlessBest: 0,
+  daily: { date: "", best: 0 },
+  achievements: [],
 };
 
 const isNum = (x: unknown): x is number => typeof x === "number" && Number.isFinite(x);
@@ -113,6 +122,7 @@ function isV2(x: unknown): x is SaveV2 {
     isBool(s["hinted"]) &&
     typeof s["stats"] === "object" &&
     s["stats"] !== null
+    // fields added later (endlessBest, daily, achievements) are back-filled by migrate
   );
 }
 
@@ -125,7 +135,12 @@ export function detectLang(): Lang {
 
 /** Bring any stored shape up to the current version; unknown shapes become the default. */
 export function migrate(raw: unknown, fresh: () => SaveV2 = () => DEFAULT_SAVE): SaveV2 {
-  if (isV2(raw)) return { ...raw, stats: { ...DEFAULT_STATS, ...raw.stats } };
+  if (isV2(raw)) {
+    const merged: SaveV2 = { ...DEFAULT_SAVE, ...raw, stats: { ...DEFAULT_STATS, ...raw.stats } };
+    if (!Array.isArray(merged.achievements)) merged.achievements = [];
+    if (typeof merged.daily?.best !== "number") merged.daily = { date: "", best: 0 };
+    return merged;
+  }
   if (isV1(raw)) {
     return {
       ...fresh(),
@@ -187,6 +202,9 @@ export function resetProgress(): SaveV2 {
     unlockedChapter: 0,
     hinted: false,
     stats: DEFAULT_STATS,
+    endlessBest: 0,
+    daily: { date: "", best: 0 },
+    achievements: [],
   };
   write(next);
   return next;
