@@ -22,6 +22,7 @@ import type { Assets, GameEvent, Viewport, World } from "@/game/types";
 import { applyViewport, computeViewport, DEFAULT_VIEWPORT } from "@/game/viewport";
 import { pick, useLang } from "@/i18n";
 import { track } from "@/lib/analytics";
+import { platform } from "@/platform";
 import { cn } from "@/lib/utils";
 import { Hud } from "./game/Hud";
 import {
@@ -64,6 +65,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
   const unflushedLeapsRef = useRef(0);
   const fxRef = useRef(createFx());
   const lastScaleRef = useRef(1);
+  const readyRef = useRef(false);
 
   const { lang } = useLang();
   langRef.current = lang;
@@ -480,6 +482,10 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
         running: world.running && !pausedRef.current,
       });
       drawFrame(now);
+      if (!readyRef.current) {
+        readyRef.current = true;
+        platform().ready(); // first frame is up: native splash can go
+      }
       raf = requestAnimationFrame(frame);
     };
 
@@ -517,6 +523,29 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [requestFlap, togglePause, toggleMute]);
+
+  // Hardware back (Android): close what's open, else pause, else back to chapters, else leave.
+  useEffect(
+    () =>
+      platform().onBackButton(() => {
+        if (settingsOpenRef.current) {
+          setSettingsOpen(false);
+          return "handled";
+        }
+        switch (stateRef.current) {
+          case "playing":
+            if (!pausedRef.current) setPaused(true);
+            else toChapters();
+            return "handled";
+          case "ready":
+            return "exit";
+          default:
+            toChapters();
+            return "handled";
+        }
+      }),
+    [toChapters],
+  );
 
   // Pause when the tab is hidden or the window loses focus.
   useEffect(() => {

@@ -6,7 +6,29 @@
  * current one, so a save written by an old build is never thrown away.
  */
 
-const KEY = "hanuman-leap:v1";
+export const STORAGE_KEY = "hanuman-leap:v1";
+const KEY = STORAGE_KEY;
+
+/**
+ * Optional secondary store. The native build mirrors every write into Capacitor
+ * Preferences and restores from it at boot if the WebView's localStorage was
+ * evicted, so an installed app never loses progress.
+ */
+let mirror: ((json: string) => void) | null = null;
+
+export function setStorageMirror(fn: ((json: string) => void) | null) {
+  mirror = fn;
+}
+
+/** Seed localStorage from a backup when it has nothing of its own (native boot). */
+export function restoreSave(json: string | null) {
+  if (typeof window === "undefined" || !json) return;
+  try {
+    if (!window.localStorage.getItem(KEY)) window.localStorage.setItem(KEY, json);
+  } catch {
+    // storage disabled; the in-memory defaults apply
+  }
+}
 
 export type Lang = "hi" | "en";
 
@@ -132,11 +154,13 @@ export function loadSave(): SaveV2 {
 
 function write(next: SaveV2) {
   if (typeof window === "undefined") return;
+  const json = JSON.stringify(next);
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(next));
+    window.localStorage.setItem(KEY, json);
   } catch {
     // quota exceeded or storage disabled — the in-memory value still wins this session
   }
+  mirror?.(json);
 }
 
 /** Shallow-merge a patch into the stored save and return the result. */

@@ -67,7 +67,17 @@ linear (no force-push — see `AGENTS.md`).
 | **Capacitor** (WebView shell)     | App Store + Play                 | ~100 % (web build + a small platform adapter)                                         | M      | **Recommended.** Canvas 2D at 60 fps is fine in WKWebView/Chrome WebView for this game; native haptics, share, preferences, splash, back button |
 | **Expo / React Native + Skia**    | App Store + Play                 | ~60 % (engine, mechanics, chapters, fx are portable; renderer, audio, and UI are not) | L      | Best native feel, but a rewrite of `render/`, `audio.ts`, and every screen for no visible gain on a 2D one-tap game                             |
 
-### 2.2 Capacitor plan
+### 2.2 Capacitor plan — **steps 1–4 done 2026-09-15**; 5–8 need the owner's machine and accounts
+
+Status: `native/` + `src/native/` entry, `vite.native.config.ts`, `src/platform/` seam with
+`capacitor.ts` (haptics via Haptics plugin, Android back button → settings/pause/chapters/exit,
+splash hidden on first frame, save mirrored to Preferences and restored if localStorage is wiped),
+`capacitor.config.ts`, `ios/` (SPM, no CocoaPods) and `android/` generated with Capacitor 8 and
+synced, icons + splash generated from `assets/`. This machine has no Xcode, CocoaPods, Android
+Studio, or JDK, so nothing native has been compiled yet. To continue: install Xcode (+ iOS
+platform) and Android Studio, run `bun run cap:ios` / `bun run cap:android`, build to the
+simulator/emulator, and check: safe-area padding under the notch, haptics on hit, back button on
+Android, orientation changes mid-run, audio after the first tap, and that the splash hides.
 
 1. **Native entry, no SSR.** `native/index.html` + `src/native/main.tsx` that mounts `<HanumanLeap/>`
    in a full-screen shell (no header, ignores `?chapter`). A separate `vite.native.config.ts`
@@ -184,5 +194,5 @@ Phase 6 ✅ → Phase 7 to TestFlight/Play-internal (≈ 1 week; needs Xcode/And
 developer accounts) → Phase 8 (≈ 1–2 weeks) → public store launch → Phase 9 and 10 as appetite and
 telemetry dictate.
 
-**Next session starts with Phase 7 §2.2 steps 1–2** (native Vite entry + platform adapter), which
-need no accounts; `cap add ios/android` follows once the toolchains are confirmed on the machine.
+**Phase 7 is blocked on toolchains** (Xcode, Android Studio) and accounts; everything that could be
+done without them is committed. **Phase 8 (replayability) can start now** — it is pure web/game code.

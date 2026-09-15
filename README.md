@@ -56,6 +56,27 @@ bun run build      # production build (TanStack Start + nitro)
 bun run preview
 ```
 
+### Mobile app (Capacitor)
+
+The same game ships as an iOS/Android app through a second, plain-Vite entry
+(`native/index.html` → `src/native/main.tsx`) with no router, SSR, or service
+worker. `src/platform/` is the seam: the web build uses its defaults, the native
+entry installs Capacitor implementations (haptics, back button, splash, a
+Preferences mirror of the save). The web bundle never contains Capacitor.
+
+```bash
+bun run build:native   # dist-native/
+bun run cap:sync       # build + copy into ios/ and android/
+bun run cap:ios        # … and open Xcode        (needs Xcode + iOS platform)
+bun run cap:android    # … and open Android Studio (needs Android Studio + a JDK)
+```
+
+Icons and splash screens are generated from `assets/` with
+`bunx capacitor-assets generate --ios --android` (already committed). The bundle
+id `app.hanumanleap` is a placeholder — rename in `capacitor.config.ts`,
+`ios/App/App.xcodeproj`, and `android/app/build.gradle` before the first store
+upload. Never commit a release keystore (`*.jks` / `*.keystore` are ignored).
+
 ### Layout
 
 ```
@@ -74,6 +95,9 @@ src/i18n/           en/hi strings, LangProvider, useT()
 src/lib/analytics.ts  provider-agnostic track(); Vercel Web Analytics today
 src/lib/sw.ts + public/sw.js  offline service worker (production only)
 src/components/     React shell, HUD, screens, settings sheet
+src/platform/       host seam (web defaults; capacitor.ts for the app)
+src/native/         Capacitor entry + shell; vite.native.config.ts builds it
+ios/, android/      generated Capacitor projects (commit them; web assets inside are ignored)
 docs/ROADMAP.md     next phases and the mobile-app plan
 ```
 
