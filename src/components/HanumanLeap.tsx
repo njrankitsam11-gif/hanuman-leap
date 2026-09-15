@@ -1,21 +1,27 @@
-import { Pause, Volume2, VolumeX } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { loadAssets } from "@/game/assets";
 import { playSfx, setMuted, unlockAudio } from "@/game/audio";
+import { chapterAt, LAST_CHAPTER } from "@/game/chapters";
 import { DEATH_COOLDOWN_MS, MAX_DT, MAX_SUBSTEPS, STEP } from "@/game/constants";
-import { createWorld, resizeWorld, step } from "@/game/engine";
+import { createWorld, resizeWorld, retryChapter, startChapter, step } from "@/game/engine";
 import { render } from "@/game/render";
-import { stageAt } from "@/game/stages";
 import { loadSave, saveGame } from "@/game/storage";
 import type { Assets, GameEvent, Viewport, World } from "@/game/types";
 import { applyViewport, computeViewport, DEFAULT_VIEWPORT } from "@/game/viewport";
 import { cn } from "@/lib/utils";
+import { Hud } from "./game/Hud";
+import {
+  ChapterClear,
+  ChapterIntro,
+  GameOver,
+  PauseMenu,
+  StartScreen,
+  WinScreen,
+} from "./game/Screens";
 
-type GameState = "ready" | "playing" | "over";
+type GameState = "ready" | "intro" | "playing" | "chapterClear" | "over" | "won";
 
-export default function HanumanLeap() {
+export default function HanumanLeap({ initialChapter }: { initialChapter?: number }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -33,10 +39,12 @@ export default function HanumanLeap() {
 
   const [state, setState] = useState<GameState>("ready");
   const [paused, setPaused] = useState(false);
-  const [leaps, setLeaps] = useState(0);
-  const [score, setScore] = useState(0);
-  const [level, setLevel] = useState(0);
+  const [chapter, setChapter] = useState(0);
+  const [passes, setPasses] = useState(0);
+  const [punya, setPunya] = useState(0);
+  const [deaths, setDeaths] = useState(0);
   const [best, setBest] = useState(0);
+  const [unlocked, setUnlocked] = useState(0);
   const [muted, setMutedState] = useState(false);
   const [canContinue, setCanContinue] = useState(false);
   /** CSS size of the canvas box once the container has been measured. */
@@ -45,36 +53,90 @@ export default function HanumanLeap() {
   stateRef.current = state;
   pausedRef.current = paused;
 
-  const drawFrame = useCallback(() => {
+  const drawFrame = useCallback((now: number) => {
     const ctx = ctxRef.current;
     const assets = assetsRef.current;
     if (!ctx || !assets) return;
-    render(ctx, worldRef.current, vpRef.current, assets);
+    const s = stateRef.current;
+    render(ctx, worldRef.current, vpRef.current, assets, {
+      now,
+      idle: s === "ready" || s === "intro",
+    });
   }, []);
 
-  const startRun = useCallback(() => {
-    worldRef.current = createWorld(vpRef.current);
-    pendingFlapRef.current = false;
-    setLeaps(0);
-    setScore(0);
-    setLevel(0);
-    setPaused(false);
-    setCanContinue(false);
+  const syncHud = useCallback(() => {
+    const w = worldRef.current;
+    setChapter(w.chapter);
+    setPasses(w.passes);
+    setPunya(w.punya);
+    setDeaths(w.deaths);
+  }, []);
+
+  const recordBest = useCallback((value: number) => {
+    if (value <= bestRef.current) return;
+    bestRef.current = value;
+    setBest(value);
+    saveGame({ best: value });
+  }, []);
+
+  /** Go to a chapter's intro card. `fresh` starts a brand-new run. */
+  const goToChapter = useCallback(
+    (index: number, fresh: boolean) => {
+      if (fresh) worldRef.current = createWorld(vpRef.current);
+      startChapter(worldRef.current, index, vpRef.current);
+      pendingFlapRef.current = false;
+      setPaused(false);
+      setCanContinue(false);
+      syncHud();
+      setState("intro");
+    },
+    [syncHud],
+  );
+
+  const beginPlay = useCallback(() => {
+    worldRef.current.running = true;
+    pendingFlapRef.current = true;
+    playSfx("flap");
     setState("playing");
   }, []);
+
+  const retry = useCallback(() => {
+    retryChapter(worldRef.current, vpRef.current);
+    pendingFlapRef.current = false;
+    setPaused(false);
+    setCanContinue(false);
+    syncHud();
+    setState("intro");
+  }, [syncHud]);
+
+  const toChapters = useCallback(() => {
+    worldRef.current = createWorld(vpRef.current);
+    setPaused(false);
+    syncHud();
+    setState("ready");
+  }, [syncHud]);
 
   const requestFlap = useCallback(() => {
     unlockAudio();
     if (pausedRef.current) return;
-    const s = stateRef.current;
-    if (s === "playing") {
-      pendingFlapRef.current = true;
-      playSfx("flap");
-      return;
+    switch (stateRef.current) {
+      case "playing":
+        pendingFlapRef.current = true;
+        playSfx("flap");
+        return;
+      case "intro":
+        beginPlay();
+        return;
+      case "ready":
+        goToChapter(0, true);
+        return;
+      case "over":
+        if (performance.now() - overAtRef.current >= DEATH_COOLDOWN_MS) retry();
+        return;
+      default:
+        return; // chapterClear / won: use the buttons
     }
-    if (s === "over" && performance.now() - overAtRef.current < DEATH_COOLDOWN_MS) return;
-    startRun();
-  }, [startRun]);
+  }, [beginPlay, goToChapter, retry]);
 
   const togglePause = useCallback(() => {
     if (stateRef.current !== "playing") return;
@@ -95,11 +157,13 @@ export default function HanumanLeap() {
     bestRef.current = save.best;
     mutedRef.current = save.muted;
     setBest(save.best);
+    setUnlocked(save.unlockedChapter);
     setMutedState(save.muted);
     setMuted(save.muted);
-    // The world starts idle behind the "ready" overlay.
-    worldRef.current.running = false;
-  }, []);
+    if (initialChapter !== undefined) {
+      goToChapter(Math.max(0, Math.min(LAST_CHAPTER, initialChapter)), true);
+    }
+  }, [initialChapter, goToChapter]);
 
   // Size the logical viewport from the container; re-run on resize and DPR change.
   useEffect(() => {
@@ -127,7 +191,7 @@ export default function HanumanLeap() {
       vpRef.current = next;
       applyViewport(canvas, ctx, next);
       setBox({ w: next.cssW, h: next.cssH });
-      drawFrame();
+      drawFrame(performance.now());
     };
 
     const ro = new ResizeObserver(apply);
@@ -161,21 +225,47 @@ export default function HanumanLeap() {
 
     const dispatch = (events: GameEvent[], now: number) => {
       for (const ev of events) {
-        if (ev.type === "pass") {
-          setLeaps(ev.leaps);
-          setScore(ev.score);
-          setLevel(ev.level);
-          playSfx("pass");
-        } else {
-          overAtRef.current = now;
-          setCanContinue(false);
-          setState("over");
-          playSfx("hit");
-          if (ev.score > bestRef.current) {
-            bestRef.current = ev.score;
-            setBest(ev.score);
-            saveGame({ best: ev.score });
+        switch (ev.type) {
+          case "pass":
+            setPasses(ev.passes);
+            setPunya(ev.punya);
+            playSfx("pass");
+            break;
+          case "hit":
+            overAtRef.current = now;
+            setCanContinue(false);
+            setDeaths(worldRef.current.deaths);
+            recordBest(ev.punya);
+            setState("over");
+            playSfx("hit");
+            break;
+          case "finale":
+            break;
+          case "chapterClear": {
+            setPunya(ev.punya);
+            recordBest(ev.punya);
+            const next = ev.chapter + 1;
+            setUnlocked((u) => {
+              const nu = Math.max(u, next);
+              if (nu !== u) saveGame({ unlockedChapter: nu });
+              return nu;
+            });
+            setState("chapterClear");
+            playSfx("chapter");
+            break;
           }
+          case "won":
+            setPunya(ev.punya);
+            setDeaths(ev.deaths);
+            recordBest(ev.punya);
+            setUnlocked((u) => {
+              const nu = Math.max(u, LAST_CHAPTER);
+              if (nu !== u) saveGame({ unlockedChapter: nu });
+              return nu;
+            });
+            setState("won");
+            playSfx("win");
+            break;
         }
       }
     };
@@ -201,13 +291,13 @@ export default function HanumanLeap() {
         if (events.length) dispatch(events, now);
       }
 
-      drawFrame();
+      drawFrame(now);
       raf = requestAnimationFrame(frame);
     };
 
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [drawFrame]);
+  }, [drawFrame, recordBest]);
 
   // Keyboard: flap / pause / mute. Ignore auto-repeat and anything typed into a control.
   useEffect(() => {
@@ -263,8 +353,7 @@ export default function HanumanLeap() {
     return () => clearTimeout(t);
   }, [state]);
 
-  const stage = stageAt(level);
-  const stopPointer = (e: React.PointerEvent) => e.stopPropagation();
+  const ch = chapterAt(chapter);
 
   return (
     <div ref={containerRef} className="flex min-h-0 w-full flex-1 items-center justify-center">
@@ -281,104 +370,70 @@ export default function HanumanLeap() {
       >
         <canvas ref={canvasRef} className="block h-full w-full touch-none select-none" />
 
-        {/* HUD */}
-        <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-2 sm:left-4 sm:top-4">
-          <div className="rounded-full bg-background/70 px-3 py-1 text-sm font-semibold text-foreground backdrop-blur sm:px-4 sm:py-1.5">
-            Punya {score}
-          </div>
-          <div className="rounded-full bg-background/70 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur sm:px-4 sm:py-1.5">
-            Leaps {leaps}
-          </div>
-        </div>
-        <div className="pointer-events-none absolute right-3 top-3 flex flex-col items-end gap-2 sm:right-4 sm:top-4">
-          <div className="flex items-center gap-2">
-            <div className="rounded-full bg-background/70 px-3 py-1 text-sm font-semibold text-foreground backdrop-blur sm:px-4 sm:py-1.5">
-              Best {best}
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label={muted ? "Unmute" : "Mute"}
-              className="pointer-events-auto h-8 w-8 rounded-full bg-background/70 backdrop-blur"
-              onPointerDown={stopPointer}
-              onClick={toggleMute}
-            >
-              {muted ? <VolumeX /> : <Volume2 />}
-            </Button>
-            {state === "playing" && (
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label="Pause"
-                className="pointer-events-auto h-8 w-8 rounded-full bg-background/70 backdrop-blur"
-                onPointerDown={stopPointer}
-                onClick={togglePause}
-              >
-                <Pause />
-              </Button>
-            )}
-          </div>
-          <div className="rounded-full bg-background/70 px-3 py-1 text-xs font-medium text-foreground backdrop-blur sm:px-4 sm:py-1.5">
-            Level {level + 1} · {stage.name}
-          </div>
-        </div>
+        {state !== "ready" && state !== "won" && (
+          <Hud
+            chapter={ch}
+            chapterIndex={chapter}
+            passes={passes}
+            punya={punya}
+            best={best}
+            muted={muted}
+            showPause={state === "playing"}
+            onMute={toggleMute}
+            onPause={togglePause}
+          />
+        )}
 
         {state === "playing" && !paused && (
           <div className="pointer-events-none absolute bottom-3 left-1/2 max-w-[85%] -translate-x-1/2 rounded-full bg-background/70 px-4 py-1.5 text-center text-xs text-muted-foreground backdrop-blur sm:bottom-4">
-            {stage.line}
+            {ch.caption}
           </div>
         )}
 
-        {/* Pause menu */}
         {state === "playing" && paused && (
-          <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background/70 px-6 text-center backdrop-blur-sm"
-            onPointerDown={stopPointer}
-          >
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">Paused</h2>
-            <div className="flex gap-2">
-              <Button size="lg" onClick={() => setPaused(false)}>
-                Resume
-              </Button>
-              <Button size="lg" variant="outline" onClick={startRun}>
-                Restart
-              </Button>
-            </div>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Switch checked={muted} onCheckedChange={toggleMute} /> Mute sounds
-            </label>
-            <p className="text-xs text-muted-foreground">P or Esc to resume · M to mute</p>
-          </div>
+          <PauseMenu
+            muted={muted}
+            onResume={() => setPaused(false)}
+            onRestart={retry}
+            onChapters={toChapters}
+            onMute={toggleMute}
+          />
         )}
-
-        {/* Start / game-over */}
-        {state !== "playing" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/70 px-6 text-center backdrop-blur-sm">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              {state === "ready" ? "Hanuman's Leap — Sundara Kanda" : "The leap ended"}
-            </h2>
-            <p className="max-w-lg text-sm text-muted-foreground">
-              {state === "ready"
-                ? "Bearing Lord Ram's ring for Sita Maa, spring from Mahendra Parvata across the hundred yojanas of sea. Honour Mainaka, outwit Surasa, tear past Simhika, and break through the rakshasa sentries and Lankini at Lanka's gate."
-                : `Punya ${score} over ${leaps} leap${leaps === 1 ? "" : "s"} — you reached Level ${level + 1}, ${stage.name}. The ring is still in your hand.`}
-            </p>
-            <Button
-              size="lg"
-              className="mt-2 rounded-full px-7 shadow-lg transition-transform hover:scale-105"
-              onPointerDown={stopPointer}
-              onClick={startRun}
-            >
-              {state === "ready" ? "Begin the leap" : "Leap again"}
-            </Button>
-            <p
-              className={cn(
-                "text-xs text-muted-foreground transition-opacity duration-300",
-                state === "over" && !canContinue ? "opacity-0" : "opacity-100",
-              )}
-            >
-              Space or tap to {state === "ready" ? "begin" : "leap again"}
-            </p>
-          </div>
+        {state === "ready" && (
+          <StartScreen
+            unlocked={unlocked}
+            onStart={() => goToChapter(0, true)}
+            onSelect={(i) => goToChapter(i, true)}
+          />
+        )}
+        {state === "intro" && <ChapterIntro chapter={ch} index={chapter} />}
+        {state === "chapterClear" && (
+          <ChapterClear
+            chapter={ch}
+            index={chapter}
+            punya={punya}
+            onContinue={() => goToChapter(chapter + 1, false)}
+          />
+        )}
+        {state === "over" && (
+          <GameOver
+            chapter={ch}
+            index={chapter}
+            punya={punya}
+            canContinue={canContinue}
+            onRetry={retry}
+            onChapters={toChapters}
+          />
+        )}
+        {state === "won" && (
+          <WinScreen
+            chapter={ch}
+            punya={punya}
+            best={best}
+            flawless={deaths === 0}
+            onPlayAgain={() => goToChapter(0, true)}
+            onChapters={toChapters}
+          />
         )}
       </div>
     </div>

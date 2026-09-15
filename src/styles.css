@@ -146,4 +146,12 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  /* Devanagari needs a font with full conjunct/matra shaping; system stacks are the fallback. */
+  [lang="hi"],
+  .font-devanagari {
+    font-family:
+      "Noto Sans Devanagari", "Kohinoor Devanagari", "Devanagari Sangam MN", "Nirmala UI", "Mangal",
+      system-ui, sans-serif;
+  }
 }

@@ -1,5 +1,5 @@
 import { OB_W } from "../constants";
-import { KINDS } from "../stages";
+import { KINDS } from "../kinds";
 import type { Obstacle, Viewport } from "../types";
 
 /** Plain gradient column with gold cap strips (Mainaka, Surasa, Simhika). */
@@ -91,7 +91,7 @@ function drawRakshasa(
 }
 
 export function drawObstacle(ctx: CanvasRenderingContext2D, o: Obstacle, vp: Viewport) {
-  if (o.kind === 3 || o.kind === 4) {
+  if (KINDS[o.kind].style === "rakshasa") {
     drawRakshasa(ctx, o, true, 0, o.gapY);
     drawRakshasa(ctx, o, false, o.gapY + o.gapH, vp.h - vp.seaH);
   } else {

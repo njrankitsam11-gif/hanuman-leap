@@ -7,11 +7,13 @@ export function drawHero(
   world: World,
   vp: Viewport,
   hero: HTMLImageElement,
+  /** Idle bob offset (px) while the hero hovers on a menu. */
+  bob = 0,
 ) {
   // Tilt is tuned against the landscape fall speed; scale so portrait matches.
   const tilt = Math.max(-0.4, Math.min(0.7, world.vy / (900 * (vp.h / 560))));
   ctx.save();
-  ctx.translate(vp.heroX, world.y);
+  ctx.translate(vp.heroX, world.y + bob);
   ctx.rotate(tilt);
   if (isReady(hero)) {
     ctx.drawImage(hero, HERO_DRAW.ox, HERO_DRAW.oy, HERO_DRAW.w, HERO_DRAW.h);

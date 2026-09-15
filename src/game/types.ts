@@ -1,10 +1,10 @@
-export type Kind = 0 | 1 | 2 | 3 | 4;
+import type { ObstacleKindId } from "./chapters/types";
 
 export type Obstacle = {
   x: number;
   gapY: number;
   gapH: number;
-  kind: Kind;
+  kind: ObstacleKindId;
   passed: boolean;
   baseGapY: number;
   phase: number;
@@ -29,6 +29,9 @@ export type Viewport = {
   speedMul: number;
 };
 
+/** "run" is normal play; "finale" is the closing glide/scene; "frozen" is between chapters. */
+export type WorldPhase = "run" | "finale" | "frozen";
+
 export type World = {
   y: number;
   vy: number;
@@ -36,10 +39,21 @@ export type World = {
   scroll: number;
   spawnTimer: number;
   obstacles: Obstacle[];
-  leaps: number;
-  score: number;
-  level: number;
   running: boolean;
+  phase: WorldPhase;
+  finaleT: number;
+  /** Chapter index into CHAPTERS. */
+  chapter: number;
+  /** Passes in the current chapter. */
+  passes: number;
+  /** Passes across the whole run. */
+  leaps: number;
+  punya: number;
+  /** Punya to revert to when the chapter is retried. */
+  punyaAtChapterStart: number;
+  bossSpawned: boolean;
+  bossPassed: boolean;
+  deaths: number;
   /** Injectable for deterministic tests; Math.random in production. */
   rng: () => number;
 };
@@ -48,7 +62,11 @@ export type World = {
 export type Input = { flap: boolean };
 
 export type GameEvent =
-  { type: "pass"; leaps: number; score: number; level: number } | { type: "hit"; score: number };
+  | { type: "pass"; passes: number; punya: number; kind: ObstacleKindId }
+  | { type: "hit"; punya: number }
+  | { type: "finale"; chapter: number }
+  | { type: "chapterClear"; chapter: number; punya: number }
+  | { type: "won"; punya: number; deaths: number };
 
 export type Assets = {
   hero: HTMLImageElement;

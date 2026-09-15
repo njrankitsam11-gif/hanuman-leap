@@ -1,7 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import HanumanLeap from "@/components/HanumanLeap";
 
+/** `?chapter=n` jumps straight to a chapter's intro — handy for testing later chapters. */
+function validateSearch(search: Record<string, unknown>): { chapter?: number } {
+  const raw = search["chapter"];
+  const n = typeof raw === "string" ? Number(raw) : typeof raw === "number" ? raw : NaN;
+  return Number.isInteger(n) && n >= 0 ? { chapter: n } : {};
+}
+
 export const Route = createFileRoute("/")({
+  validateSearch,
   head: () => ({
     meta: [
       { title: "Hanuman's Leap to Lanka - Ramayana Flying Game" },
@@ -27,6 +35,7 @@ export const Route = createFileRoute("/")({
  * start overlay. Desktop landscape: a header above, the game box contain-fit below.
  */
 function Index() {
+  const { chapter } = Route.useSearch();
   return (
     <main className="flex h-dvh flex-col items-center gap-4 overflow-hidden bg-background p-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] md:landscape:px-6 md:landscape:py-6">
       <header className="hidden text-center md:landscape:block">
@@ -41,10 +50,10 @@ function Index() {
         </p>
       </header>
       <div className="flex min-h-0 w-full flex-1 md:landscape:max-w-[1000px]">
-        <HanumanLeap />
+        <HanumanLeap {...(chapter !== undefined ? { initialChapter: chapter } : {})} />
       </div>
       <p className="hidden text-xs text-muted-foreground md:landscape:block">
-        Space / tap to rise · P to pause · M to mute · rakshasas are worth extra punya
+        Space / tap to rise · P to pause · M to mute · verses from Tulsidas's Ramcharitmanas
       </p>
     </main>
   );

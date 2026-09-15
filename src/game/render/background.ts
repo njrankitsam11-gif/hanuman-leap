@@ -28,12 +28,6 @@ export function drawBackground(
   ctx.drawImage(bg, dw - off, dy, dw, dh);
 }
 
-/** Dusk deepens as Lanka nears. */
-export function drawTint(ctx: CanvasRenderingContext2D, level: number, vp: Viewport) {
-  ctx.fillStyle = `rgba(${90 + level * 20}, ${70 - level * 8}, ${40 + level * 10}, ${0.1 + level * 0.05})`;
-  ctx.fillRect(0, 0, vp.w, vp.h);
-}
-
 export function drawSea(ctx: CanvasRenderingContext2D, scroll: number, vp: Viewport) {
   const top = vp.h - vp.seaH;
   const seaGrad = ctx.createLinearGradient(0, top, 0, vp.h);
