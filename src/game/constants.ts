@@ -23,8 +23,8 @@ export const FLAP_H = -0.768;
 /** Hero placement (fraction of W) and hitbox (AABB half-size, absolute). */
 export const HERO_X_FRAC = 0.19;
 export const HERO_R = 28;
-/** Visible character inside hanuman.png (alpha bbox of the 816² frame). */
-export const HERO_SRC = { x: 23, y: 147, w: 761, h: 460 } as const;
+/** Source rect inside hanuman.webp (already cropped to the alpha bbox of the original 816² frame). */
+export const HERO_SRC = { x: 0, y: 0, w: 761, h: 460 } as const;
 /** Sprite draw rect, relative to the hero centre (same aspect as HERO_SRC). */
 export const HERO_DRAW = { w: 96, h: 58, ox: -48, oy: -29 } as const;
 
