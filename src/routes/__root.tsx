@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { initAnalytics, track } from "../lib/analytics";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { registerServiceWorker } from "../lib/sw";
 
 function NotFoundComponent() {
   return (
@@ -141,6 +142,7 @@ function RootComponent() {
   // Page views from here on; "install" fires when the PWA is added to a home screen.
   useEffect(() => {
     initAnalytics();
+    registerServiceWorker();
     const onInstalled = () => track({ name: "install" });
     window.addEventListener("appinstalled", onInstalled);
     return () => window.removeEventListener("appinstalled", onInstalled);
