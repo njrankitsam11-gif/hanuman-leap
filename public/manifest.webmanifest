@@ -1,0 +1,17 @@
+{
+  "name": "Hanuman's Leap to Lanka",
+  "short_name": "Hanuman's Leap",
+  "description": "A one-tap flying game through eight chapters of the Sundarkand, with Tulsidas's verses.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d4a57",
+  "theme_color": "#e07c28",
+  "lang": "en",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
