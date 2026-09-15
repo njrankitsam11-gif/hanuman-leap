@@ -5,14 +5,35 @@ import type { Obstacle, Viewport, World } from "../types";
 
 type Ctx = CanvasRenderingContext2D;
 
+/**
+ * Horizontal column gradients depend only on colours and width, so one per kind is
+ * built at x = 0 and reused under a translate instead of a new gradient per column
+ * per frame (cheap on desktop, measurable on low-end phones).
+ */
+const bodyGrads = new WeakMap<Ctx, Map<string, CanvasGradient>>();
+
+function bodyGradient(ctx: Ctx, w: number, top: string, bottom: string) {
+  let perCtx = bodyGrads.get(ctx);
+  if (!perCtx) bodyGrads.set(ctx, (perCtx = new Map()));
+  const key = `${w}|${top}|${bottom}`;
+  let grad = perCtx.get(key);
+  if (!grad) {
+    grad = ctx.createLinearGradient(0, 0, w, 0);
+    grad.addColorStop(0, top);
+    grad.addColorStop(1, bottom);
+    perCtx.set(key, grad);
+  }
+  return grad;
+}
+
 /** Gradient-filled column pieces above and below the gap. */
 function columnBody(ctx: Ctx, o: Obstacle, vp: Viewport, top: string, bottom: string) {
-  const grad = ctx.createLinearGradient(o.x, 0, o.x + o.w, 0);
-  grad.addColorStop(0, top);
-  grad.addColorStop(1, bottom);
-  ctx.fillStyle = grad;
-  ctx.fillRect(o.x, 0, o.w, o.gapY);
-  ctx.fillRect(o.x, o.gapY + o.gapH, o.w, vp.h - o.gapY - o.gapH);
+  ctx.save();
+  ctx.translate(o.x, 0);
+  ctx.fillStyle = bodyGradient(ctx, o.w, top, bottom);
+  ctx.fillRect(0, 0, o.w, o.gapY);
+  ctx.fillRect(0, o.gapY + o.gapH, o.w, vp.h - o.gapY - o.gapH);
+  ctx.restore();
 }
 
 function caps(ctx: Ctx, o: Obstacle, color: string) {
