@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Hanuman\'s Leap</string>
+    <string name="title_activity_main">Hanuman\'s Leap</string>
+    <string name="package_name">app.hanumanleap</string>
+    <string name="custom_url_scheme">app.hanumanleap</string>
+</resources>
