@@ -8,8 +8,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { ACHIEVEMENTS } from "@/game/achievements";
+import { CHAPTERS } from "@/game/chapters";
 import type { Lang, Stats } from "@/game/storage";
-import { LANG_NAMES, useLang, useT } from "@/i18n";
+import { LANG_NAMES, pick, useLang, useT } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { stopPointer } from "./Overlay";
 
@@ -25,6 +27,7 @@ export function SettingsSheet({
   settings,
   hapticsAvailable,
   stats,
+  achievements,
   onChange,
   onReset,
 }: {
@@ -34,6 +37,7 @@ export function SettingsSheet({
   /** Hide the vibration toggle where the platform can't buzz (desktop, iOS Safari). */
   hapticsAvailable: boolean;
   stats: Stats;
+  achievements: readonly string[];
   onChange: (patch: Partial<Settings>) => void;
   onReset: () => void;
 }) {
@@ -128,6 +132,60 @@ export function SettingsSheet({
             <dt className="text-muted-foreground">{t("settings.wins")}</dt>
             <dd className="text-right tabular-nums">{stats.wins}</dd>
           </dl>
+          {stats.chapters.some((c) => c.clears + c.deaths > 0) && (
+            <table className="mt-3 w-full text-xs">
+              <thead className="text-muted-foreground">
+                <tr>
+                  <th className="text-left font-medium">{t("stats.chapter")}</th>
+                  <th className="text-right font-medium">{t("stats.clears")}</th>
+                  <th className="text-right font-medium">{t("stats.falls")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CHAPTERS.map((ch, i) => {
+                  const c = stats.chapters[i];
+                  if (!c || c.clears + c.deaths === 0) return null;
+                  return (
+                    <tr key={ch.id}>
+                      <td lang="hi" className="font-devanagari py-0.5">
+                        {i + 1} · {ch.title.hi}
+                      </td>
+                      <td className="text-right tabular-nums">{c.clears}</td>
+                      <td className="text-right tabular-nums">{c.deaths}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </section>
+
+        <section className="rounded-xl border border-border/60 bg-muted/40 px-4 py-3">
+          <h3 className="flex items-baseline justify-between text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground [&:lang(hi)]:tracking-normal">
+            <span>{t("ach.title")}</span>
+            <span className="tabular-nums">
+              {t("ach.progress", { n: achievements.length, total: ACHIEVEMENTS.length })}
+            </span>
+          </h3>
+          <ul className="mt-2 flex flex-wrap gap-1.5">
+            {ACHIEVEMENTS.map((a) => {
+              const got = achievements.includes(a.id);
+              return (
+                <li
+                  key={a.id}
+                  title={pick(lang, a.desc)}
+                  className={cn(
+                    "rounded-full border px-2.5 py-0.5 text-xs",
+                    got
+                      ? "border-primary/40 bg-primary/10 text-foreground"
+                      : "border-border/60 text-muted-foreground/60",
+                  )}
+                >
+                  {pick(lang, a.title)}
+                </li>
+              );
+            })}
+          </ul>
         </section>
 
         {confirming ? (

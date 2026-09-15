@@ -66,6 +66,30 @@ const en = {
   "settings.erase": "Erase",
   "settings.cancel": "Cancel",
   "settings.close": "Close",
+  "mode.endless": "Endless Flight",
+  "mode.daily": "Today's Leap",
+  "mode.dailyHint": "The same sea for everyone today · {date}",
+  "mode.locked": "Reach Lankini's gate to unlock",
+  "mode.intro.endless": "Endless Flight",
+  "mode.intro.daily": "Today's Leap · {date}",
+
+  "endless.over": "The flight ended",
+  "endless.result": "{passes} leaps · Punya {punya}",
+  "endless.best": "Best {best}",
+  "endless.bestToday": "Best today {best}",
+  "endless.newBest": "New best!",
+  "hud.leaps": "Leaps",
+
+  share: "Share",
+  "share.copied": "Copied — paste it anywhere",
+  "share.failed": "Couldn't share on this device",
+
+  "ach.unlocked": "Achievement",
+  "ach.title": "Achievements",
+  "ach.progress": "{n} of {total}",
+  "stats.chapter": "Chapter",
+  "stats.clears": "Clears",
+  "stats.falls": "Falls",
 } as const;
 
 export type StringKey = keyof typeof en;
@@ -130,6 +154,30 @@ const hi: Record<StringKey, string> = {
   "settings.erase": "मिटाएँ",
   "settings.cancel": "रद्द करें",
   "settings.close": "बंद करें",
+  "mode.endless": "अखंड उड़ान",
+  "mode.daily": "आज की उड़ान",
+  "mode.dailyHint": "आज सबके लिए एक जैसा समुद्र · {date}",
+  "mode.locked": "खोलने के लिए लंकिनी के द्वार तक पहुँचें",
+  "mode.intro.endless": "अखंड उड़ान",
+  "mode.intro.daily": "आज की उड़ान · {date}",
+
+  "endless.over": "उड़ान थम गई",
+  "endless.result": "{passes} छलाँगें · पुण्य {punya}",
+  "endless.best": "सर्वश्रेष्ठ {best}",
+  "endless.bestToday": "आज का सर्वश्रेष्ठ {best}",
+  "endless.newBest": "नया सर्वश्रेष्ठ!",
+  "hud.leaps": "छलाँगें",
+
+  share: "साझा करें",
+  "share.copied": "कॉपी हो गया — कहीं भी चिपकाएँ",
+  "share.failed": "इस डिवाइस पर साझा नहीं हो सका",
+
+  "ach.unlocked": "उपलब्धि",
+  "ach.title": "उपलब्धियाँ",
+  "ach.progress": "{total} में से {n}",
+  "stats.chapter": "अध्याय",
+  "stats.clears": "पूरे",
+  "stats.falls": "गिरावटें",
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = { en, hi };

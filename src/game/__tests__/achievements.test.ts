@@ -7,7 +7,9 @@ import { computeViewport } from "../viewport";
 
 const vp = computeViewport(CANON_LANDSCAPE.w, CANON_LANDSCAPE.h, 1);
 
-function ctx(over: Partial<AchievementCtx> & { chapter?: number }): AchievementCtx {
+function ctx(
+  over: Partial<Omit<AchievementCtx, "chapter">> & { chapter?: number },
+): AchievementCtx {
   const world = createWorld(vp, () => 0.5);
   startChapter(world, over.chapter ?? 0, vp);
   const { chapter: idx, ...rest } = over;

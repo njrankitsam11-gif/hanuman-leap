@@ -1,20 +1,35 @@
 import { Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Mode } from "@/game/achievements";
 import type { Chapter } from "@/game/chapters/types";
 import { CHAPTER_COUNT } from "@/game/chapters";
+import type { ShareOutcome } from "@/game/share";
 import { pick, useLang, useT } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { ChapterSelect } from "./ChapterSelect";
+import { ModeCards } from "./ModeCards";
 import { Overlay, stopPointer } from "./Overlay";
+import { ShareButton } from "./ShareButton";
 import { VerseBlock } from "./VerseBlock";
+
+export type ModeInfo = {
+  unlocked: boolean;
+  endlessBest: number;
+  dailyBest: number;
+  dailyDate: string;
+  onEndless: () => void;
+  onDaily: () => void;
+};
 
 export function StartScreen({
   unlocked,
+  modes,
   onStart,
   onSelect,
   onSettings,
 }: {
   unlocked: number;
+  modes: ModeInfo;
   onStart: () => void;
   onSelect: (index: number) => void;
   onSettings: () => void;
@@ -51,18 +66,35 @@ export function StartScreen({
         {t("start.orChoose")}
       </p>
       <ChapterSelect unlocked={unlocked} onSelect={onSelect} />
+      <ModeCards {...modes} />
       <p className="text-xs text-muted-foreground">{t("start.controls")}</p>
     </Overlay>
   );
 }
 
-export function ChapterIntro({ chapter, index }: { chapter: Chapter; index: number }) {
+export function ChapterIntro({
+  chapter,
+  index,
+  mode,
+  date,
+}: {
+  chapter: Chapter;
+  index: number;
+  mode: Mode;
+  date: string;
+}) {
   const t = useT();
   const { lang } = useLang();
+  const eyebrow =
+    mode === "daily"
+      ? t("mode.intro.daily", { date })
+      : mode === "endless"
+        ? t("mode.intro.endless")
+        : t("intro.chapterOf", { n: index + 1, total: CHAPTER_COUNT });
   return (
     <Overlay className="bg-background/60">
       <p className="text-[10px] font-semibold uppercase tracking-[0.3em] [&:lang(hi)]:tracking-normal text-muted-foreground">
-        {t("intro.chapterOf", { n: index + 1, total: CHAPTER_COUNT })}
+        {eyebrow}
       </p>
       <h2 lang="hi" className="font-devanagari text-3xl font-bold text-foreground sm:text-4xl">
         {chapter.title.hi}
@@ -136,6 +168,7 @@ export function GameOver({
   canContinue,
   onRetry,
   onChapters,
+  onShare,
 }: {
   chapter: Chapter;
   index: number;
@@ -143,6 +176,7 @@ export function GameOver({
   canContinue: boolean;
   onRetry: () => void;
   onChapters: () => void;
+  onShare: () => Promise<ShareOutcome>;
 }) {
   const t = useT();
   return (
@@ -173,6 +207,7 @@ export function GameOver({
         >
           {t("nav.chapters")}
         </Button>
+        {punya > 0 && <ShareButton onShare={onShare} />}
       </div>
       <p
         className={cn(
@@ -186,6 +221,64 @@ export function GameOver({
   );
 }
 
+/** Endless / Daily: the run is the score. Same verse every time — no rest until Ram's work is done. */
+export function EndlessOver({
+  mode,
+  chapter,
+  passes,
+  punya,
+  best,
+  newBest,
+  onRetry,
+  onChapters,
+  onShare,
+}: {
+  mode: Mode;
+  chapter: Chapter;
+  passes: number;
+  punya: number;
+  best: number;
+  newBest: boolean;
+  onRetry: () => void;
+  onChapters: () => void;
+  onShare: () => Promise<ShareOutcome>;
+}) {
+  const t = useT();
+  return (
+    <Overlay interactive>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.3em] [&:lang(hi)]:tracking-normal text-muted-foreground">
+        {mode === "daily" ? t("mode.daily") : t("mode.endless")}
+      </p>
+      <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        {t("endless.over")}
+      </h2>
+      <p className="text-base font-semibold text-foreground">
+        {t("endless.result", { passes, punya })}
+      </p>
+      <p className="text-sm text-muted-foreground">
+        {mode === "daily" ? t("endless.bestToday", { best }) : t("endless.best", { best })}
+        {newBest && (
+          <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 font-semibold text-primary">
+            {t("endless.newBest")}
+          </span>
+        )}
+      </p>
+      <div className="max-w-md rounded-xl border border-border/60 bg-background/60 px-4 py-3">
+        <VerseBlock verse={chapter.verse} compact />
+      </div>
+      <div className="mt-1 flex flex-wrap items-start justify-center gap-2">
+        <Button size="lg" autoFocus className="rounded-full px-7 shadow-lg" onClick={onRetry}>
+          {t("over.retry")}
+        </Button>
+        <Button size="lg" variant="outline" className="rounded-full px-6" onClick={onChapters}>
+          {t("nav.chapters")}
+        </Button>
+        {punya > 0 && <ShareButton onShare={onShare} />}
+      </div>
+    </Overlay>
+  );
+}
+
 export function WinScreen({
   chapter,
   punya,
@@ -193,6 +286,7 @@ export function WinScreen({
   flawless,
   onPlayAgain,
   onChapters,
+  onShare,
 }: {
   chapter: Chapter;
   punya: number;
@@ -200,6 +294,7 @@ export function WinScreen({
   flawless: boolean;
   onPlayAgain: () => void;
   onChapters: () => void;
+  onShare: () => Promise<ShareOutcome>;
 }) {
   const t = useT();
   return (
@@ -222,13 +317,14 @@ export function WinScreen({
           </span>
         )}
       </p>
-      <div className="mt-1 flex gap-2">
+      <div className="mt-1 flex flex-wrap items-start justify-center gap-2">
         <Button size="lg" autoFocus className="rounded-full px-7 shadow-lg" onClick={onPlayAgain}>
           {t("win.again")}
         </Button>
         <Button size="lg" variant="outline" className="rounded-full px-6" onClick={onChapters}>
           {t("nav.chapters")}
         </Button>
+        <ShareButton onShare={onShare} />
       </div>
     </Overlay>
   );

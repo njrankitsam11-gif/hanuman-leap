@@ -91,7 +91,7 @@ describe("verses", () => {
 
 describe("endless chapter", () => {
   it("lives outside the arc at ENDLESS_INDEX with every non-boss kind in its roster", () => {
-    expect(CHAPTERS.some((c) => c.id === "endless")).toBe(false);
+    expect((CHAPTERS as readonly Chapter[]).some((c) => c.id === "endless")).toBe(false);
     expect(chapterAt(ENDLESS_INDEX)).toBe(ENDLESS);
     expect(isEndless(ENDLESS)).toBe(true);
     expect(CHAPTERS.some(isEndless)).toBe(false);

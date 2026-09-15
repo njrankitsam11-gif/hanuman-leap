@@ -15,8 +15,8 @@ export type Platform = {
   exitApp: () => void;
   /** Called once the first frame is on screen (hides a native splash screen). */
   ready: () => void;
-  /** Native share sheet; undefined means "use the Web Share API / clipboard". */
-  share?: (data: { title: string; text: string; url: string }) => Promise<boolean>;
+  /** Native share sheet; null means "use the Web Share API / clipboard". */
+  share: ((data: { title: string; text: string; url: string }) => Promise<boolean>) | null;
 };
 
 const web: Platform = {
@@ -24,6 +24,7 @@ const web: Platform = {
   onBackButton: () => () => {},
   exitApp: () => {},
   ready: () => {},
+  share: null,
 };
 
 let current: Platform = web;

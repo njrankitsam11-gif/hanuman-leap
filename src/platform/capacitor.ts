@@ -69,6 +69,6 @@ export async function installCapacitor(): Promise<void> {
             return false; // dismissed or unavailable
           }
         }
-      : undefined,
+      : null,
   });
 }

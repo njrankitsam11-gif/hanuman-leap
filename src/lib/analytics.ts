@@ -7,11 +7,13 @@
  * shown; page views are. They appear as soon as the project is on Pro.
  */
 import { inject, track as vercelTrack } from "@vercel/analytics";
+import type { Mode } from "@/game/achievements";
 import type { ObstacleKindId } from "@/game/chapters/types";
 import type { Lang } from "@/game/storage";
 
 export type AnalyticsEvent =
-  | { name: "run_start"; chapter: number; fresh: boolean; easy: boolean; lang: Lang }
+  | { name: "run_start"; chapter: number; fresh: boolean; easy: boolean; lang: Lang; mode: Mode }
+  | { name: "achievement"; id: string }
   | { name: "chapter_start"; chapter: number }
   | { name: "chapter_clear"; chapter: number; deaths: number; punya: number }
   | { name: "death"; chapter: number; kind: ObstacleKindId | "wall"; passes: number }
