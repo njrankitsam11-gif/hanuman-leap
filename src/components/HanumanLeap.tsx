@@ -231,6 +231,10 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
             setPunya(ev.punya);
             playSfx("pass");
             break;
+          case "collect":
+            setPunya(ev.punya);
+            playSfx("collect");
+            break;
           case "hit":
             overAtRef.current = now;
             setCanContinue(false);

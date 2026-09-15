@@ -10,14 +10,16 @@ import {
   SPAWN_MARGIN_SPAN_FRAC,
   SPAWN_MARGIN_TOP_FRAC,
   SPAWN_X_OFFSET,
-  SWAY_RATE,
 } from "./constants";
 import { KINDS } from "./kinds";
+import { MECHANICS, resetChapterEffects } from "./mechanics";
+import { BEHAVIOURS, COLLECT_PUNYA, columnCollide, heroHitbox } from "./obstacles/registry";
 import type { GameEvent, Input, Obstacle, Viewport, World } from "./types";
 
 /**
  * Pure game engine. Nothing in here touches the DOM or React — the component
- * feeds it `dt` and `Input`, and reacts to the events it returns.
+ * feeds it `dt` and `Input`, and reacts to the events it returns. Per-kind and
+ * per-chapter behaviour is looked up in registries so this file never special-cases.
  */
 
 /** Punya rules. */
@@ -28,6 +30,9 @@ export const WIN_BONUS = 500;
 export const FLAWLESS_BONUS = 500;
 
 export const LAST_CHAPTER = CHAPTERS.length - 1;
+
+/** Seconds into the finale at which the scroll has fully stopped. */
+export const FINALE_SLOW_S = 1.2;
 
 export function createWorld(vp: Viewport, rng: () => number = Math.random): World {
   return {
@@ -48,6 +53,11 @@ export function createWorld(vp: Viewport, rng: () => number = Math.random): Worl
     bossSpawned: false,
     bossPassed: false,
     deaths: 0,
+    heroScale: 1,
+    gravityMul: 1,
+    tailFire: false,
+    dir: 1,
+    speedRamp: 1,
     rng,
   };
 }
@@ -66,6 +76,9 @@ export function startChapter(world: World, index: number, vp: Viewport) {
   world.running = false;
   world.y = vp.h / 2;
   world.vy = 0;
+  resetChapterEffects(world);
+  const ch = chapterAt(index);
+  MECHANICS[ch.id]?.onEnter?.(world, vp, ch);
 }
 
 /** Undo the current chapter's progress for a retry. */
@@ -74,7 +87,8 @@ export function retryChapter(world: World, vp: Viewport) {
   startChapter(world, world.chapter, vp);
 }
 
-export const chapterSpeed = (ch: Chapter, vp: Viewport) => ch.difficulty.speed * vp.h * vp.speedMul;
+export const chapterSpeed = (ch: Chapter, vp: Viewport, world?: World) =>
+  ch.difficulty.speed * vp.h * vp.speedMul * (world?.speedRamp ?? 1);
 
 function pickFromRoster(world: World, ch: Chapter): ObstacleKindId {
   let total = 0;
@@ -107,40 +121,40 @@ export function spawnObstacle(
   const top = SPAWN_MARGIN_TOP_FRAC * vp.h;
   const span = SPAWN_MARGIN_SPAN_FRAC * vp.h;
   const gapY = top + world.rng() * (vp.h - span - gapH);
-  return {
+  const o: Obstacle = {
     x: vp.w + SPAWN_X_OFFSET,
+    w: OB_W,
     gapY,
     gapH,
     kind,
     passed: false,
     baseGapY: gapY,
+    baseGapH: gapH,
     phase: world.rng() * Math.PI * 2,
   };
+  BEHAVIOURS[kind]?.init?.(o, world, vp, ch);
+  return o;
 }
 
-/** Kinds with a sway amplitude move their gap up and down. */
-function oscillate(o: Obstacle, world: World, vp: Viewport) {
-  const sway = KINDS[o.kind].sway;
-  if (!sway) return;
-  const amp = Math.min(sway * vp.h, o.baseGapY - 20, vp.h - vp.seaH - o.gapH - o.baseGapY - 20);
-  o.gapY = o.baseGapY + Math.sin(world.t * SWAY_RATE + o.phase) * Math.max(0, amp);
+/** Ceiling and sea are always lethal. */
+export function hitsWalls(world: World, vp: Viewport): boolean {
+  const r = HERO_R * world.heroScale;
+  return world.y - r < 0 || world.y + r > vp.h - vp.seaH;
 }
 
-/** AABB hero vs ceiling, sea, and every column outside its gap. */
+/** Combined check, mostly for tests: walls plus every column's own rule. */
 export function collide(world: World, vp: Viewport): boolean {
-  const { y } = world;
-  const hx = vp.heroX;
-  if (y - HERO_R < 0 || y + HERO_R > vp.h - vp.seaH) return true;
+  if (hitsWalls(world, vp)) return true;
+  const hero = heroHitbox(world, vp);
   return world.obstacles.some(
-    (o) =>
-      hx + HERO_R > o.x &&
-      hx - HERO_R < o.x + OB_W &&
-      (y - HERO_R < o.gapY || y + HERO_R > o.gapY + o.gapH),
+    (o) => (BEHAVIOURS[o.kind]?.collide ?? columnCollide)(o, hero, vp) === "hit",
   );
 }
 
-export const passPunya = (kind: ObstacleKindId, ch: Chapter) =>
-  Math.round(PASS_PUNYA * ch.scoreMul) + (KINDS[kind].bonus ?? 0);
+export const passPunya = (o: Obstacle, world: World, ch: Chapter) =>
+  Math.round(PASS_PUNYA * ch.scoreMul) +
+  (KINDS[o.kind].bonus ?? 0) +
+  (BEHAVIOURS[o.kind]?.passBonus?.(o, world) ?? 0);
 
 export function goalReached(world: World, ch: Chapter): boolean {
   return ch.goal.kind === "boss" ? world.bossPassed : world.passes >= targetPasses(ch);
@@ -148,14 +162,17 @@ export function goalReached(world: World, ch: Chapter): boolean {
 
 /** Every column is fully behind the hero, so the closing glide can't clip one. */
 const clearBehind = (world: World, vp: Viewport) =>
-  world.obstacles.every((o) => o.passed && o.x + OB_W < vp.heroX - HERO_R);
+  world.obstacles.every((o) => o.passed && o.x + o.w < vp.heroX - HERO_R);
 
 function stepFinale(world: World, dt: number, vp: Viewport, ch: Chapter, speed: number) {
   const events: GameEvent[] = [];
   world.finaleT += dt;
+  // the world eases to a halt so the scene can hold
+  const k = 1 - Math.min(1, world.finaleT / FINALE_SLOW_S);
+  world.scroll += speed * k * dt;
   world.vy = 0;
-  world.y += (vp.h * 0.5 - world.y) * Math.min(1, 4 * dt);
-  for (const o of world.obstacles) o.x -= speed * dt;
+  world.y += (vp.h * 0.45 - world.y) * Math.min(1, 4 * dt);
+  for (const o of world.obstacles) o.x -= speed * k * dt;
   world.obstacles = world.obstacles.filter((o) => o.x > DESPAWN_X);
 
   if (world.finaleT >= finaleDuration(ch)) {
@@ -176,15 +193,28 @@ export function step(world: World, input: Input, dt: number, vp: Viewport): Game
   if (!world.running) return [];
 
   const ch = chapterAt(world.chapter);
-  const speed = chapterSpeed(ch, vp);
+  MECHANICS[ch.id]?.onUpdate?.(world, vp, ch, dt);
+  const speed = chapterSpeed(ch, vp, world);
   world.t += dt;
-  world.scroll += speed * dt;
 
+  // The finale advances scroll itself, with its own easing.
   if (world.phase === "finale") return stepFinale(world, dt, vp, ch, speed);
+  world.scroll += speed * dt;
 
   const events: GameEvent[] = [];
   if (input.flap) world.vy = FLAP_H * vp.h;
-  world.vy += GRAVITY_H * vp.h * dt;
+
+  // Obstacles move and act on the hero before the hero integrates.
+  world.heroScale = 1;
+  world.gravityMul = 1;
+  for (const o of world.obstacles) {
+    o.x -= speed * dt;
+    const b = BEHAVIOURS[o.kind];
+    b?.update?.(o, world, vp, dt);
+    b?.affectHero?.(o, world, vp);
+  }
+
+  world.vy += GRAVITY_H * vp.h * world.gravityMul * dt;
   world.y += world.vy * dt;
 
   world.spawnTimer += dt;
@@ -198,20 +228,34 @@ export function step(world: World, input: Input, dt: number, vp: Viewport): Game
   }
 
   for (const o of world.obstacles) {
-    o.x -= speed * dt;
-    oscillate(o, world, vp);
-    if (!o.passed && o.x + OB_W < vp.heroX) {
+    if (!o.passed && o.x + o.w < vp.heroX) {
       o.passed = true;
       world.passes += 1;
       world.leaps += 1;
-      world.punya += passPunya(o.kind, ch);
+      world.punya += passPunya(o, world, ch);
       if (KINDS[o.kind].boss) world.bossPassed = true;
       events.push({ type: "pass", passes: world.passes, punya: world.punya, kind: o.kind });
     }
   }
   world.obstacles = world.obstacles.filter((o) => o.x > DESPAWN_X);
 
-  if (collide(world, vp)) {
+  // Collisions: walls, then each column's own rule.
+  let hit = hitsWalls(world, vp);
+  if (!hit) {
+    const hero = heroHitbox(world, vp);
+    for (const o of world.obstacles) {
+      const result = (BEHAVIOURS[o.kind]?.collide ?? columnCollide)(o, hero, vp);
+      if (result === "hit") {
+        hit = true;
+        break;
+      }
+      if (result === "collect") {
+        world.punya += COLLECT_PUNYA;
+        events.push({ type: "collect", punya: world.punya });
+      }
+    }
+  }
+  if (hit) {
     world.running = false;
     world.deaths += 1;
     events.push({ type: "hit", punya: world.punya });
@@ -240,5 +284,7 @@ export function resizeWorld(world: World, from: Viewport, to: Viewport) {
     o.gapY *= k;
     o.gapH *= k;
     o.baseGapY *= k;
+    o.baseGapH *= k;
+    if (o.targetPeakY !== undefined) o.targetPeakY *= k;
   }
 }
