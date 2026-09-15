@@ -1,15 +1,17 @@
 import {
   DESPAWN_X,
-  FLAP,
-  GRAVITY,
+  FLAP_H,
+  GAP_SHRINK_PER_LEAP_FRAC,
+  GRAVITY_H,
   HERO_R,
-  HERO_X,
-  MIN_GAP,
+  MIN_GAP_FRAC,
   OB_W,
-  SEA_H,
-  SPAWN_MARGIN_SPAN,
-  SPAWN_MARGIN_TOP,
+  SPAWN_MARGIN_SPAN_FRAC,
+  SPAWN_MARGIN_TOP_FRAC,
   SPAWN_X_OFFSET,
+  SWAY_LANKINI_FRAC,
+  SWAY_RAKSHASA_FRAC,
+  SWAY_RATE,
 } from "./constants";
 import { stageAt, stageFor, scoreForPass, type Stage } from "./stages";
 import type { GameEvent, Input, Kind, Obstacle, Viewport, World } from "./types";
@@ -35,9 +37,17 @@ export function createWorld(vp: Viewport, rng: () => number = Math.random): Worl
   };
 }
 
+/** Stage speed in logical px/s for this viewport. */
+export const stageSpeed = (stage: Stage, vp: Viewport) => stage.speed * vp.h * vp.speedMul;
+
 export function spawnObstacle(world: World, vp: Viewport, stage: Stage): Obstacle {
-  const gapH = Math.max(MIN_GAP, stage.gap - world.leaps);
-  const gapY = SPAWN_MARGIN_TOP + world.rng() * (vp.h - SPAWN_MARGIN_SPAN - gapH);
+  const gapH = Math.max(
+    MIN_GAP_FRAC * vp.h,
+    (stage.gap - world.leaps * GAP_SHRINK_PER_LEAP_FRAC) * vp.h,
+  );
+  const top = SPAWN_MARGIN_TOP_FRAC * vp.h;
+  const span = SPAWN_MARGIN_SPAN_FRAC * vp.h;
+  const gapY = top + world.rng() * (vp.h - span - gapH);
   const kind = (stage.kinds[Math.floor(world.rng() * stage.kinds.length)] ?? 0) as Kind;
   return {
     x: vp.w + SPAWN_X_OFFSET,
@@ -54,21 +64,22 @@ export function spawnObstacle(world: World, vp: Viewport, stage: Stage): Obstacl
 function oscillate(o: Obstacle, world: World, vp: Viewport) {
   if (o.kind !== 3 && o.kind !== 4) return;
   const amp = Math.min(
-    o.kind === 4 ? 110 : 85,
+    (o.kind === 4 ? SWAY_LANKINI_FRAC : SWAY_RAKSHASA_FRAC) * vp.h,
     o.baseGapY - 20,
-    vp.h - SEA_H - o.gapH - o.baseGapY - 20,
+    vp.h - vp.seaH - o.gapH - o.baseGapY - 20,
   );
-  o.gapY = o.baseGapY + Math.sin(world.t * 2.2 + o.phase) * Math.max(0, amp);
+  o.gapY = o.baseGapY + Math.sin(world.t * SWAY_RATE + o.phase) * Math.max(0, amp);
 }
 
 /** AABB hero vs ceiling, sea, and every column outside its gap. */
 export function collide(world: World, vp: Viewport): boolean {
   const { y } = world;
-  if (y - HERO_R < 0 || y + HERO_R > vp.h - SEA_H) return true;
+  const hx = vp.heroX;
+  if (y - HERO_R < 0 || y + HERO_R > vp.h - vp.seaH) return true;
   return world.obstacles.some(
     (o) =>
-      HERO_X + HERO_R > o.x &&
-      HERO_X - HERO_R < o.x + OB_W &&
+      hx + HERO_R > o.x &&
+      hx - HERO_R < o.x + OB_W &&
       (y - HERO_R < o.gapY || y + HERO_R > o.gapY + o.gapH),
   );
 }
@@ -78,12 +89,13 @@ export function step(world: World, input: Input, dt: number, vp: Viewport): Game
   if (!world.running) return events;
 
   const stage = stageAt(world.level);
+  const speed = stageSpeed(stage, vp);
 
-  if (input.flap) world.vy = FLAP;
+  if (input.flap) world.vy = FLAP_H * vp.h;
 
   world.t += dt;
-  world.scroll += stage.speed * dt;
-  world.vy += GRAVITY * dt;
+  world.scroll += speed * dt;
+  world.vy += GRAVITY_H * vp.h * dt;
   world.y += world.vy * dt;
 
   world.spawnTimer += dt;
@@ -93,9 +105,9 @@ export function step(world: World, input: Input, dt: number, vp: Viewport): Game
   }
 
   for (const o of world.obstacles) {
-    o.x -= stage.speed * dt;
+    o.x -= speed * dt;
     oscillate(o, world, vp);
-    if (!o.passed && o.x + OB_W < HERO_X) {
+    if (!o.passed && o.x + OB_W < vp.heroX) {
       o.passed = true;
       world.leaps += 1;
       world.score += scoreForPass(world.level, o.kind);
@@ -111,4 +123,21 @@ export function step(world: World, input: Input, dt: number, vp: Viewport): Game
   }
 
   return events;
+}
+
+/**
+ * Carry a live world across a viewport change. Vertical quantities are fractions of H,
+ * so they scale; x positions are left alone (a column that lands off-screen simply
+ * scrolls in later).
+ */
+export function resizeWorld(world: World, from: Viewport, to: Viewport) {
+  if (from.h === to.h) return;
+  const k = to.h / from.h;
+  world.y *= k;
+  world.vy *= k;
+  for (const o of world.obstacles) {
+    o.gapY *= k;
+    o.gapH *= k;
+    o.baseGapY *= k;
+  }
 }

@@ -1,27 +1,59 @@
-/** Logical canvas size (landscape). Phase 1 makes this viewport-driven. */
-export const W = 900;
-export const H = 560;
+/**
+ * Every vertical quantity is a fraction of the logical height `H` so the game feels
+ * identical in landscape (H = 560) and portrait (H = 768). Sprite and column sizes are
+ * absolute logical px — they should read the same on any screen, not zoom with it.
+ *
+ * Fractions below are derived from the original 900×560 tuning (value / 560).
+ */
 
-/** Physics — px/s² and px/s in logical space. */
-export const GRAVITY = 1500;
-export const FLAP = -430;
+/** Canonical logical heights per orientation. */
+export const LANDSCAPE_H = 560;
+export const PORTRAIT_H = 768;
+/** Logical aspect-ratio clamps: W = H × clamp(containerAspect). */
+export const LANDSCAPE_ASPECT: readonly [number, number] = [1.35, 2.1];
+export const PORTRAIT_ASPECT: readonly [number, number] = [0.45, 0.8];
+/** Canonical design sizes (what the clamps produce at 16:10 and 9:16). */
+export const CANON_LANDSCAPE = { w: 900, h: LANDSCAPE_H } as const;
+export const CANON_PORTRAIT = { w: 432, h: PORTRAIT_H } as const;
 
-/** Hero placement and hitbox (AABB half-size). */
-export const HERO_X = 170;
+/** Physics, ·H per s² and ·H per s (1500/560, −430/560). */
+export const GRAVITY_H = 2.679;
+export const FLAP_H = -0.768;
+
+/** Hero placement (fraction of W) and hitbox (AABB half-size, absolute). */
+export const HERO_X_FRAC = 0.19;
 export const HERO_R = 28;
 /** Sprite draw rect, relative to the hero centre. */
 export const HERO_DRAW = { w: 92, h: 80, ox: -46, oy: -40 } as const;
 
-/** Obstacle column width and the sea strip along the bottom edge. */
+/** Column width (absolute) and the sea strip height (·H, 50/560). */
 export const OB_W = 84;
-export const SEA_H = 50;
+export const SEA_H_FRAC = 0.089;
 
-/** Spawn/despawn geometry. */
+/** Spawn geometry: x offset past the right edge (absolute), vertical margins (·H). */
 export const SPAWN_X_OFFSET = 60;
-export const SPAWN_MARGIN_TOP = 80;
-export const SPAWN_MARGIN_SPAN = 170;
-export const MIN_GAP = 150;
+export const SPAWN_MARGIN_TOP_FRAC = 0.143; // 80/560
+export const SPAWN_MARGIN_SPAN_FRAC = 0.304; // 170/560
+export const MIN_GAP_FRAC = 0.268; // 150/560
+/** Gap narrows by this much (·H) per leap cleared (was 1px at H = 560). */
+export const GAP_SHRINK_PER_LEAP_FRAC = 1 / 560;
 export const DESPAWN_X = -140;
 
-/** Clamp on frame delta so a backgrounded tab doesn't teleport the hero. */
+/** Vertical sway of rakshasa / lankini gaps (·H: 85/560, 110/560). */
+export const SWAY_RAKSHASA_FRAC = 0.152;
+export const SWAY_LANKINI_FRAC = 0.196;
+export const SWAY_RATE = 2.2;
+
+/** Portrait columns arrive at a shorter horizontal distance; slow them for a fair reaction time. */
+export const PORTRAIT_SPEED_MUL = 0.72;
+
+/** Fixed simulation step and the cap on wall-clock delta per frame. */
+export const STEP = 1 / 120;
+export const MAX_SUBSTEPS = 8;
 export const MAX_DT = 0.05;
+
+/** Ignore input for this long after a hit so a panic tap doesn't skip the game-over screen. */
+export const DEATH_COOLDOWN_MS = 600;
+
+/** Backing-store cap; 3× buys little on a phone and costs a lot of fill rate. */
+export const MAX_DPR = 2;

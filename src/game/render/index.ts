@@ -9,5 +9,5 @@ export function render(ctx: CanvasRenderingContext2D, world: World, vp: Viewport
   drawTint(ctx, world.level, vp);
   for (const o of world.obstacles) drawObstacle(ctx, o, vp);
   drawSea(ctx, world.scroll, vp);
-  drawHero(ctx, world, assets.hero);
+  drawHero(ctx, world, vp, assets.hero);
 }

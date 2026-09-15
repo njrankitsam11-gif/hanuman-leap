@@ -1,4 +1,4 @@
-import { OB_W, SEA_H } from "../constants";
+import { OB_W } from "../constants";
 import { KINDS } from "../stages";
 import type { Obstacle, Viewport } from "../types";
 
@@ -93,7 +93,7 @@ function drawRakshasa(
 export function drawObstacle(ctx: CanvasRenderingContext2D, o: Obstacle, vp: Viewport) {
   if (o.kind === 3 || o.kind === 4) {
     drawRakshasa(ctx, o, true, 0, o.gapY);
-    drawRakshasa(ctx, o, false, o.gapY + o.gapH, vp.h - SEA_H);
+    drawRakshasa(ctx, o, false, o.gapY + o.gapH, vp.h - vp.seaH);
   } else {
     drawColumn(ctx, o, vp);
   }

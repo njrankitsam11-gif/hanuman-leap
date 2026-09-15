@@ -12,8 +12,11 @@ export const KINDS = [
 export type Stage = {
   name: string;
   line: string;
+  /** Scroll speed, ·H per second. */
   speed: number;
+  /** Seconds between spawns. */
   spawn: number;
+  /** Gap height, ·H. */
   gap: number;
   kinds: readonly Kind[];
 };
@@ -23,41 +26,41 @@ export const STAGES = [
   {
     name: "Mahendra Parvata",
     line: "Hanuman swells in size and springs from the mountain toward the sea.",
-    speed: 210,
+    speed: 0.375,
     spawn: 1.7,
-    gap: 220,
+    gap: 0.393,
     kinds: [0, 0, 1],
   },
   {
     name: "Sagara's Waters",
     line: "Mainaka rises to offer rest; Hanuman touches it in respect and flies on.",
-    speed: 235,
+    speed: 0.42,
     spawn: 1.55,
-    gap: 205,
+    gap: 0.366,
     kinds: [0, 1, 1],
   },
   {
     name: "Surasa's Mouth",
     line: "Mother of serpents bars the way — grow vast, then shrink to a thumb and slip through.",
-    speed: 255,
+    speed: 0.455,
     spawn: 1.45,
-    gap: 190,
+    gap: 0.339,
     kinds: [1, 1, 2],
   },
   {
     name: "Simhika's Shadow",
     line: "The shadow-seizer drags him down; he tears through her and rises again.",
-    speed: 275,
+    speed: 0.491,
     spawn: 1.35,
-    gap: 178,
+    gap: 0.318,
     kinds: [2, 2, 3],
   },
   {
     name: "Shores of Lanka",
     line: "Rakshasa sentries patrol the ramparts and Lankini guards the golden gate.",
-    speed: 300,
+    speed: 0.536,
     spawn: 1.2,
-    gap: 168,
+    gap: 0.3,
     kinds: [3, 3, 4],
   },
 ] as const satisfies readonly [Stage, ...Stage[]];
