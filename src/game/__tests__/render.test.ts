@@ -3,6 +3,7 @@ import { CHAPTERS, chapterAt } from "../chapters";
 import type { ObstacleKindId } from "../chapters/types";
 import { CANON_LANDSCAPE, CANON_PORTRAIT } from "../constants";
 import { createWorld, spawnObstacle, startChapter, step } from "../engine";
+import { burst, createFx, hitFx, wipeFx } from "../fx";
 import { KINDS } from "../kinds";
 import { render } from "../render";
 import type { Assets } from "../types";
@@ -66,8 +67,12 @@ describe("render", () => {
           if (kind === "simhika") o.shadowing = true;
           w.obstacles.push(o);
         }
+        const fx = createFx();
+        burst(fx, "spark", vp.heroX, w.y, 20);
+        hitFx(fx);
+        wipeFx(fx);
         const { ctx, calls } = stubContext();
-        render(ctx, w, vp, assets, { now: 1234, idle: false });
+        render(ctx, w, vp, assets, { now: 1234, idle: false, fx });
         expect(calls.length).toBeGreaterThan(50);
         expect(calls).toContain("drawImage");
         expect(calls).toContain("fillText");

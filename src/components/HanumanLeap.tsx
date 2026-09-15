@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadAssets } from "@/game/assets";
-import { playSfx, setMuted, unlockAudio } from "@/game/audio";
+import { playSfx, setAmbience, setMuted, unlockAudio } from "@/game/audio";
 import { chapterAt, LAST_CHAPTER } from "@/game/chapters";
 import { DEATH_COOLDOWN_MS, MAX_DT, MAX_SUBSTEPS, STEP } from "@/game/constants";
 import { createWorld, resizeWorld, retryChapter, startChapter, step } from "@/game/engine";
+import { SURASA_SHRINK } from "@/game/obstacles/registry";
+import { burst, createFx, flapFx, hitFx, updateFx, wipeFx } from "@/game/fx";
 import { render } from "@/game/render";
+import { sceneHeroX } from "@/game/render/scene";
 import { loadSave, saveGame } from "@/game/storage";
 import type { Assets, GameEvent, Viewport, World } from "@/game/types";
 import { applyViewport, computeViewport, DEFAULT_VIEWPORT } from "@/game/viewport";
@@ -36,6 +39,8 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
   const overAtRef = useRef(0);
   const bestRef = useRef(0);
   const mutedRef = useRef(false);
+  const fxRef = useRef(createFx());
+  const lastScaleRef = useRef(1);
 
   const [state, setState] = useState<GameState>("ready");
   const [paused, setPaused] = useState(false);
@@ -61,6 +66,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     render(ctx, worldRef.current, vpRef.current, assets, {
       now,
       idle: s === "ready" || s === "intro",
+      fx: fxRef.current,
     });
   }, []);
 
@@ -85,6 +91,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
       if (fresh) worldRef.current = createWorld(vpRef.current);
       startChapter(worldRef.current, index, vpRef.current);
       pendingFlapRef.current = false;
+      wipeFx(fxRef.current);
       setPaused(false);
       setCanContinue(false);
       syncHud();
@@ -96,6 +103,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
   const beginPlay = useCallback(() => {
     worldRef.current.running = true;
     pendingFlapRef.current = true;
+    flapFx(fxRef.current, vpRef.current.heroX, worldRef.current.y);
     playSfx("flap");
     setState("playing");
   }, []);
@@ -121,7 +129,9 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     if (pausedRef.current) return;
     switch (stateRef.current) {
       case "playing":
+        if (worldRef.current.phase !== "run") return; // finale: hands off
         pendingFlapRef.current = true;
+        flapFx(fxRef.current, vpRef.current.heroX, worldRef.current.y);
         playSfx("flap");
         return;
       case "intro":
@@ -150,6 +160,23 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     setMuted(next);
     saveGame({ muted: next });
   }, []);
+
+  // Honour prefers-reduced-motion for shake and wipes.
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => {
+      fxRef.current.reducedMotion = mq.matches;
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  // Fire ambience only while actually playing Lanka Dahan.
+  useEffect(() => {
+    const fire = state === "playing" && !paused && chapterAt(chapter).sky === "fire";
+    setAmbience(fire ? "fire" : null);
+  }, [state, paused, chapter]);
 
   // Persisted values are read on the client only, after hydration.
   useEffect(() => {
@@ -233,9 +260,11 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
             break;
           case "collect":
             setPunya(ev.punya);
+            burst(fxRef.current, "sparkle", vpRef.current.heroX, worldRef.current.y, 18);
             playSfx("collect");
             break;
           case "hit":
+            hitFx(fxRef.current);
             overAtRef.current = now;
             setCanContinue(false);
             setDeaths(worldRef.current.deaths);
@@ -295,6 +324,19 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
         if (events.length) dispatch(events, now);
       }
 
+      const world = worldRef.current;
+      const vp = vpRef.current;
+      const ch = chapterAt(world.chapter);
+      // Surasa: one cue the moment Hanuman shrinks to a thumb
+      if (world.heroScale === SURASA_SHRINK && lastScaleRef.current !== SURASA_SHRINK) {
+        playSfx("shrink");
+      }
+      lastScaleRef.current = world.heroScale;
+      updateFx(fxRef.current, pausedRef.current ? 0 : wall, world, vp, {
+        heroX: sceneHeroX(world, vp, ch),
+        fireSky: ch.sky === "fire",
+        running: world.running && !pausedRef.current,
+      });
       drawFrame(now);
       raf = requestAnimationFrame(frame);
     };
