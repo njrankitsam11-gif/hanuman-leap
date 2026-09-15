@@ -1,5 +1,5 @@
 import type { Chapter, ObstacleKindId } from "../chapters/types";
-import { HERO_R, OB_W, SWAY_RATE } from "../constants";
+import { EASY_GAP_MUL, HERO_R, OB_W, SWAY_RATE } from "../constants";
 import { KINDS } from "../kinds";
 import type { Obstacle, Viewport, World } from "../types";
 
@@ -43,6 +43,8 @@ export const LANKINI_WIDTH_MUL = 1.6;
 export const LANKINI_GAP = 0.3;
 
 export const MAINAKA_PEAK_R = 30;
+/** Gap multiplier for the current difficulty. */
+export const gapMul = (world: World) => (world.easy ? EASY_GAP_MUL : 1);
 export const MAINAKA_RISE_S = 1.0;
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -68,9 +70,9 @@ const rakshasa: ObstacleBehaviour = {
 
 /** Boss gate: wider, fixed gap, bigger sway. */
 const lankini: ObstacleBehaviour = {
-  init: (o, _world, vp) => {
+  init: (o, world, vp) => {
     o.w = OB_W * LANKINI_WIDTH_MUL;
-    o.gapH = LANKINI_GAP * vp.h;
+    o.gapH = LANKINI_GAP * vp.h * gapMul(world);
     o.baseGapH = o.gapH;
     // re-centre the gap so the bigger sway stays on screen
     o.baseGapY = (vp.h - vp.seaH - o.gapH) / 2;

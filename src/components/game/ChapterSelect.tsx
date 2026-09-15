@@ -1,5 +1,6 @@
 import { Lock } from "lucide-react";
 import { CHAPTERS } from "@/game/chapters";
+import { useT } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { stopPointer } from "./Overlay";
 
@@ -10,6 +11,7 @@ export function ChapterSelect({
   unlocked: number;
   onSelect: (index: number) => void;
 }) {
+  const t = useT();
   return (
     <div className="grid w-full max-w-lg grid-cols-4 gap-1.5 sm:gap-2">
       {CHAPTERS.map((ch, i) => {
@@ -19,7 +21,7 @@ export function ChapterSelect({
             key={ch.id}
             type="button"
             disabled={locked}
-            aria-label={`Chapter ${i + 1}: ${ch.title.en}${locked ? " (locked)" : ""}`}
+            aria-label={`${t("select.chapter", { n: i + 1, title: ch.title.en })}${locked ? ` ${t("select.locked")}` : ""}`}
             onPointerDown={stopPointer}
             onClick={() => onSelect(i)}
             className={cn(

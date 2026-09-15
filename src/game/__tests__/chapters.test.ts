@@ -32,6 +32,15 @@ describe("chapter data", () => {
     }
   });
 
+  it("every chapter's prose exists in both languages, Hindi in Devanagari", () => {
+    for (const ch of CHAPTERS as readonly Chapter[]) {
+      for (const text of [ch.title, ch.intro, ch.caption]) {
+        expect(text.en, ch.id).not.toBe("");
+        expect(text.hi, ch.id).toMatch(/[ऀ-ॿ]/);
+      }
+    }
+  });
+
   it("only the Lankini chapter is a boss chapter, and its boss kind exists", () => {
     const bosses = CHAPTERS.filter((c) => c.goal.kind === "boss");
     expect(bosses.map((c) => c.id)).toEqual(["lankini"]);
@@ -48,6 +57,7 @@ describe("verses", () => {
       expect(v.devanagari, key).toMatch(/[ऀ-ॿ]/);
       expect(v.transliteration, key).not.toBe("");
       expect(v.meaning, key).not.toBe("");
+      expect(v.meaningHi, key).toMatch(/[ऀ-ॿ]/);
     }
   });
 

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import HanumanLeap from "@/components/HanumanLeap";
+import { LangProvider, useLang, useT } from "@/i18n";
 
 /** `?chapter=n` jumps straight to a chapter's intro — handy for testing later chapters. */
 function validateSearch(search: Record<string, unknown>): { chapter?: number } {
@@ -37,26 +38,35 @@ export const Route = createFileRoute("/")({
  * start overlay. Desktop landscape: a header above, the game box contain-fit below.
  */
 function Index() {
-  const { chapter } = Route.useSearch();
   return (
-    <main className="flex h-dvh flex-col items-center gap-4 overflow-hidden bg-background p-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] md:landscape:px-6 md:landscape:py-6">
+    <LangProvider>
+      <Page />
+    </LangProvider>
+  );
+}
+
+function Page() {
+  const { chapter } = Route.useSearch();
+  const { lang } = useLang();
+  const t = useT();
+  return (
+    <main
+      lang={lang}
+      className="flex h-dvh flex-col items-center gap-4 overflow-hidden bg-background p-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] md:landscape:px-6 md:landscape:py-6"
+    >
       <header className="hidden text-center md:landscape:block">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-          Sundara Kanda
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] [&:lang(hi)]:tracking-normal text-muted-foreground">
+          {t("app.eyebrow")}
         </p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground lg:text-4xl">
-          Hanuman's Leap to Lanka
+          {t("app.title")}
         </h1>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-          From the Indian shore to Lanka, with Lord Ram's ring for Sita Maa.
-        </p>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">{t("app.tagline")}</p>
       </header>
       <div className="flex min-h-0 w-full flex-1 md:landscape:max-w-[1000px]">
         <HanumanLeap {...(chapter !== undefined ? { initialChapter: chapter } : {})} />
       </div>
-      <p className="hidden text-xs text-muted-foreground md:landscape:block">
-        Space / tap to rise · P to pause · M to mute · verses from Tulsidas's Ramcharitmanas
-      </p>
+      <p className="hidden text-xs text-muted-foreground md:landscape:block">{t("app.footer")}</p>
     </main>
   );
 }

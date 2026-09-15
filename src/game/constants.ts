@@ -54,6 +54,10 @@ export const STEP = 1 / 120;
 export const MAX_SUBSTEPS = 8;
 export const MAX_DT = 0.05;
 
+/** "Sahaj" (easy) mode: gaps are wider and columns arrive slower. */
+export const EASY_GAP_MUL = 1.2;
+export const EASY_SPEED_MUL = 0.88;
+
 /** Ignore input for this long after a hit so a panic tap doesn't skip the game-over screen. */
 export const DEATH_COOLDOWN_MS = 600;
 

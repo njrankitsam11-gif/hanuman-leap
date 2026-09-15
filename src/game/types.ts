@@ -76,6 +76,8 @@ export type World = {
   dir: 1 | -1;
   /** Chapter-driven speed ramp (Dahan accelerates). */
   speedRamp: number;
+  /** Sahaj mode: wider gaps and slower scroll (see EASY_GAP_MUL / EASY_SPEED_MUL). */
+  easy: boolean;
   /** Injectable for deterministic tests; Math.random in production. */
   rng: () => number;
 };
@@ -86,7 +88,7 @@ export type Input = { flap: boolean };
 export type GameEvent =
   | { type: "pass"; passes: number; punya: number; kind: ObstacleKindId }
   | { type: "collect"; punya: number }
-  | { type: "hit"; punya: number }
+  | { type: "hit"; punya: number; by: ObstacleKindId | "wall" }
   | { type: "finale"; chapter: number }
   | { type: "chapterClear"; chapter: number; punya: number }
   | { type: "won"; punya: number; deaths: number };

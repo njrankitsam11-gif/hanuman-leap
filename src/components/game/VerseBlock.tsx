@@ -1,8 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import type { Verse } from "@/game/chapters/types";
+import { useLang } from "@/i18n";
 import { cn } from "@/lib/utils";
 
+/** Hindi readers get the भावार्थ and no transliteration; English readers get both. */
 export function VerseBlock({ verse, compact = false }: { verse: Verse; compact?: boolean }) {
+  const { lang } = useLang();
   return (
     <figure className={cn("mx-auto max-w-xl", compact ? "space-y-1.5" : "space-y-3")}>
       <blockquote
@@ -14,14 +17,14 @@ export function VerseBlock({ verse, compact = false }: { verse: Verse; compact?:
       >
         {verse.devanagari}
       </blockquote>
-      {!compact && (
+      {!compact && lang === "en" && (
         <p className="whitespace-pre-line text-xs italic leading-relaxed text-muted-foreground sm:text-sm">
           {verse.transliteration}
         </p>
       )}
       <figcaption className="space-y-2">
-        <p className={cn("text-muted-foreground", compact ? "text-xs" : "text-sm")}>
-          {verse.meaning}
+        <p lang={lang} className={cn("text-muted-foreground", compact ? "text-xs" : "text-sm")}>
+          {lang === "hi" ? verse.meaningHi : verse.meaning}
         </p>
         <Badge variant="secondary" lang="hi" className="font-devanagari font-normal">
           सुंदरकांड · {verse.ref}

@@ -12,6 +12,8 @@ export type Verse = {
   transliteration: string;
   /** Plain English, one to three sentences. */
   meaning: string;
+  /** The same rendering in Hindi (भावार्थ). */
+  meaningHi: string;
   /** Must be true before shipping — a test enforces it. Set only after checking the text against a printed/Gita Press-derived source. */
   verified: boolean;
 };
@@ -26,13 +28,15 @@ export type ChapterGoal =
 export type ChapterId =
   "prelude" | "mainaka" | "surasa" | "simhika" | "lankini" | "vatika" | "dahan" | "return";
 
+export type Localized = { hi: string; en: string };
+
 export type Chapter = {
   id: ChapterId;
-  title: { hi: string; en: string };
+  title: Localized;
   /** One line of context on the intro card. */
-  intro: string;
+  intro: Localized;
   /** In-game caption. */
-  caption: string;
+  caption: Localized;
   goal: ChapterGoal;
   difficulty: {
     /** Scroll speed, ·H per second. */

@@ -6,23 +6,39 @@ import { DEATH_COOLDOWN_MS, MAX_DT, MAX_SUBSTEPS, STEP } from "@/game/constants"
 import { createWorld, resizeWorld, retryChapter, startChapter, step } from "@/game/engine";
 import { SURASA_SHRINK } from "@/game/obstacles/registry";
 import { burst, createFx, flapFx, hitFx, updateFx, wipeFx } from "@/game/fx";
+import { haptic, hapticsSupported, setHapticsEnabled } from "@/game/haptics";
 import { render } from "@/game/render";
 import { sceneHeroX } from "@/game/render/scene";
-import { loadSave, saveGame } from "@/game/storage";
+import {
+  bumpChapter,
+  DEFAULT_STATS,
+  loadSave,
+  resetProgress,
+  saveGame,
+  updateStats,
+  type Stats,
+} from "@/game/storage";
 import type { Assets, GameEvent, Viewport, World } from "@/game/types";
 import { applyViewport, computeViewport, DEFAULT_VIEWPORT } from "@/game/viewport";
+import { pick, useLang } from "@/i18n";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { Hud } from "./game/Hud";
 import {
   ChapterClear,
   ChapterIntro,
+  FirstRunHint,
   GameOver,
   PauseMenu,
   StartScreen,
   WinScreen,
 } from "./game/Screens";
+import { SettingsSheet, type Settings } from "./game/SettingsSheet";
 
 type GameState = "ready" | "intro" | "playing" | "chapterClear" | "over" | "won";
+
+/** Flaps before the first-run hint gives up on its own. */
+const HINT_FLAPS = 3;
 
 export default function HanumanLeap({ initialChapter }: { initialChapter?: number }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -36,27 +52,42 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
   const pendingFlapRef = useRef(false);
   const stateRef = useRef<GameState>("ready");
   const pausedRef = useRef(false);
+  const settingsOpenRef = useRef(false);
   const overAtRef = useRef(0);
   const bestRef = useRef(0);
   const mutedRef = useRef(false);
+  const easyRef = useRef(false);
+  const langRef = useRef<"hi" | "en">("en");
+  const hintedRef = useRef(true);
+  const hintFlapsRef = useRef(0);
+  /** Passes not yet folded into the persisted stats; flushed on death, clear, and win. */
+  const unflushedLeapsRef = useRef(0);
   const fxRef = useRef(createFx());
   const lastScaleRef = useRef(1);
 
+  const { lang } = useLang();
+  langRef.current = lang;
   const [state, setState] = useState<GameState>("ready");
   const [paused, setPaused] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [chapter, setChapter] = useState(0);
   const [passes, setPasses] = useState(0);
   const [punya, setPunya] = useState(0);
   const [deaths, setDeaths] = useState(0);
   const [best, setBest] = useState(0);
   const [unlocked, setUnlocked] = useState(0);
-  const [muted, setMutedState] = useState(false);
+  const [settings, setSettings] = useState<Settings>({ muted: false, haptics: true, easy: false });
+  const [stats, setStats] = useState<Stats>(DEFAULT_STATS);
+  const [hapticsAvailable, setHapticsAvailable] = useState(false);
+  const [hinted, setHinted] = useState(true);
+  const [hintFlaps, setHintFlaps] = useState(0);
   const [canContinue, setCanContinue] = useState(false);
   /** CSS size of the canvas box once the container has been measured. */
   const [box, setBox] = useState<{ w: number; h: number } | null>(null);
 
   stateRef.current = state;
   pausedRef.current = paused;
+  settingsOpenRef.current = settingsOpen;
 
   const drawFrame = useCallback((now: number) => {
     const ctx = ctxRef.current;
@@ -85,11 +116,38 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     saveGame({ best: value });
   }, []);
 
+  const markHinted = useCallback(() => {
+    if (hintedRef.current) return;
+    hintedRef.current = true;
+    setHinted(true);
+    saveGame({ hinted: true });
+  }, []);
+
+  /** Fold buffered passes plus one more change into the stored stats. */
+  const commitStats = useCallback((fn: (s: Stats) => Stats) => {
+    const leaps = unflushedLeapsRef.current;
+    unflushedLeapsRef.current = 0;
+    const next = updateStats((s) => fn({ ...s, leaps: s.leaps + leaps }));
+    setStats(next.stats);
+  }, []);
+
   /** Go to a chapter's intro card. `fresh` starts a brand-new run. */
   const goToChapter = useCallback(
     (index: number, fresh: boolean) => {
-      if (fresh) worldRef.current = createWorld(vpRef.current);
+      if (fresh) {
+        worldRef.current = createWorld(vpRef.current);
+        commitStats((s) => ({ ...s, runs: s.runs + 1 }));
+        track({
+          name: "run_start",
+          chapter: index,
+          fresh,
+          easy: easyRef.current,
+          lang: langRef.current,
+        });
+      }
+      worldRef.current.easy = easyRef.current;
       startChapter(worldRef.current, index, vpRef.current);
+      track({ name: "chapter_start", chapter: index });
       pendingFlapRef.current = false;
       wipeFx(fxRef.current);
       setPaused(false);
@@ -97,7 +155,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
       syncHud();
       setState("intro");
     },
-    [syncHud],
+    [commitStats, syncHud],
   );
 
   const beginPlay = useCallback(() => {
@@ -110,6 +168,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
 
   const retry = useCallback(() => {
     retryChapter(worldRef.current, vpRef.current);
+    track({ name: "chapter_start", chapter: worldRef.current.chapter });
     pendingFlapRef.current = false;
     setPaused(false);
     setCanContinue(false);
@@ -119,6 +178,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
 
   const toChapters = useCallback(() => {
     worldRef.current = createWorld(vpRef.current);
+    worldRef.current.easy = easyRef.current;
     setPaused(false);
     syncHud();
     setState("ready");
@@ -126,13 +186,18 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
 
   const requestFlap = useCallback(() => {
     unlockAudio();
-    if (pausedRef.current) return;
+    if (pausedRef.current || settingsOpenRef.current) return;
     switch (stateRef.current) {
       case "playing":
         if (worldRef.current.phase !== "run") return; // finale: hands off
         pendingFlapRef.current = true;
         flapFx(fxRef.current, vpRef.current.heroX, worldRef.current.y);
         playSfx("flap");
+        if (!hintedRef.current) {
+          hintFlapsRef.current += 1;
+          setHintFlaps(hintFlapsRef.current);
+          if (hintFlapsRef.current >= HINT_FLAPS) markHinted();
+        }
         return;
       case "intro":
         beginPlay();
@@ -146,20 +211,63 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
       default:
         return; // chapterClear / won: use the buttons
     }
-  }, [beginPlay, goToChapter, retry]);
+  }, [beginPlay, goToChapter, markHinted, retry]);
 
   const togglePause = useCallback(() => {
     if (stateRef.current !== "playing") return;
     setPaused((p) => !p);
   }, []);
 
-  const toggleMute = useCallback(() => {
-    const next = !mutedRef.current;
+  const applyMuted = useCallback((next: boolean) => {
     mutedRef.current = next;
-    setMutedState(next);
+    setSettings((s) => ({ ...s, muted: next }));
     setMuted(next);
     saveGame({ muted: next });
   }, []);
+
+  const toggleMute = useCallback(() => {
+    applyMuted(!mutedRef.current);
+    track({ name: "settings", key: "muted", value: String(!mutedRef.current) });
+  }, [applyMuted]);
+
+  const changeSettings = useCallback(
+    (patch: Partial<Settings>) => {
+      if (patch.muted !== undefined) {
+        applyMuted(patch.muted);
+        track({ name: "settings", key: "muted", value: String(patch.muted) });
+      }
+      if (patch.haptics !== undefined) {
+        setHapticsEnabled(patch.haptics);
+        setSettings((s) => ({ ...s, haptics: patch.haptics! }));
+        saveGame({ haptics: patch.haptics });
+        if (patch.haptics) haptic("collect");
+        track({ name: "settings", key: "haptics", value: String(patch.haptics) });
+      }
+      if (patch.easy !== undefined) {
+        easyRef.current = patch.easy;
+        worldRef.current.easy = patch.easy; // future spawns only; columns on screen stay put
+        setSettings((s) => ({ ...s, easy: patch.easy! }));
+        saveGame({ easy: patch.easy });
+        track({ name: "settings", key: "easy", value: String(patch.easy) });
+      }
+    },
+    [applyMuted],
+  );
+
+  const eraseProgress = useCallback(() => {
+    const next = resetProgress();
+    bestRef.current = 0;
+    hintedRef.current = false;
+    hintFlapsRef.current = 0;
+    unflushedLeapsRef.current = 0;
+    setBest(0);
+    setUnlocked(0);
+    setStats(next.stats);
+    setHinted(false);
+    setHintFlaps(0);
+    setSettingsOpen(false);
+    toChapters();
+  }, [toChapters]);
 
   // Honour prefers-reduced-motion for shake and wipes.
   useEffect(() => {
@@ -183,10 +291,17 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     const save = loadSave();
     bestRef.current = save.best;
     mutedRef.current = save.muted;
+    easyRef.current = save.easy;
+    hintedRef.current = save.hinted;
+    worldRef.current.easy = save.easy;
     setBest(save.best);
     setUnlocked(save.unlockedChapter);
-    setMutedState(save.muted);
+    setSettings({ muted: save.muted, haptics: save.haptics, easy: save.easy });
+    setStats(save.stats);
+    setHinted(save.hinted);
     setMuted(save.muted);
+    setHapticsEnabled(save.haptics);
+    setHapticsAvailable(hapticsSupported());
     if (initialChapter !== undefined) {
       goToChapter(Math.max(0, Math.min(LAST_CHAPTER, initialChapter)), true);
     }
@@ -252,25 +367,35 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
 
     const dispatch = (events: GameEvent[], now: number) => {
       for (const ev of events) {
+        const world = worldRef.current;
         switch (ev.type) {
           case "pass":
             setPasses(ev.passes);
             setPunya(ev.punya);
+            unflushedLeapsRef.current += 1;
+            markHinted();
             playSfx("pass");
             break;
           case "collect":
             setPunya(ev.punya);
-            burst(fxRef.current, "sparkle", vpRef.current.heroX, worldRef.current.y, 18);
+            burst(fxRef.current, "sparkle", vpRef.current.heroX, world.y, 18);
             playSfx("collect");
+            haptic("collect");
             break;
           case "hit":
             hitFx(fxRef.current);
             overAtRef.current = now;
             setCanContinue(false);
-            setDeaths(worldRef.current.deaths);
+            setDeaths(world.deaths);
             recordBest(ev.punya);
+            markHinted();
+            commitStats((s) =>
+              bumpChapter({ ...s, deaths: s.deaths + 1 }, world.chapter, "deaths"),
+            );
+            track({ name: "death", chapter: world.chapter, kind: ev.by, passes: world.passes });
             setState("over");
             playSfx("hit");
+            haptic("hit");
             break;
           case "finale":
             break;
@@ -283,8 +408,16 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
               if (nu !== u) saveGame({ unlockedChapter: nu });
               return nu;
             });
+            commitStats((s) => bumpChapter(s, ev.chapter, "clears"));
+            track({
+              name: "chapter_clear",
+              chapter: ev.chapter,
+              deaths: world.deaths,
+              punya: ev.punya,
+            });
             setState("chapterClear");
             playSfx("chapter");
+            haptic("chapter");
             break;
           }
           case "won":
@@ -296,8 +429,17 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
               if (nu !== u) saveGame({ unlockedChapter: nu });
               return nu;
             });
+            commitStats((s) =>
+              bumpChapter(
+                { ...s, wins: s.wins + 1, flawless: s.flawless + (ev.deaths === 0 ? 1 : 0) },
+                world.chapter,
+                "clears",
+              ),
+            );
+            track({ name: "won", deaths: ev.deaths, punya: ev.punya, easy: world.easy });
             setState("won");
             playSfx("win");
+            haptic("win");
             break;
         }
       }
@@ -343,12 +485,12 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
 
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [drawFrame, recordBest]);
+  }, [commitStats, drawFrame, markHinted, recordBest]);
 
-  // Keyboard: flap / pause / mute. Ignore auto-repeat and anything typed into a control.
+  // Keyboard: flap / pause / mute. Ignore auto-repeat, the settings sheet, and controls.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.repeat) return;
+      if (e.repeat || settingsOpenRef.current) return;
       const t = e.target;
       if (
         t instanceof HTMLElement &&
@@ -400,10 +542,12 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
   }, [state]);
 
   const ch = chapterAt(chapter);
+  const showHint = state === "playing" && !paused && !hinted && hintFlaps < HINT_FLAPS;
 
   return (
     <div ref={containerRef} className="flex min-h-0 w-full flex-1 items-center justify-center">
       <div
+        lang={lang}
         className={cn(
           "relative overflow-hidden bg-[#0d4a57] md:landscape:rounded-2xl md:landscape:border md:landscape:border-border md:landscape:shadow-2xl",
           !box && "aspect-[900/560] w-full max-w-[900px]",
@@ -423,26 +567,27 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
             passes={passes}
             punya={punya}
             best={best}
-            muted={muted}
+            muted={settings.muted}
             showPause={state === "playing"}
             onMute={toggleMute}
             onPause={togglePause}
           />
         )}
 
+        {showHint && <FirstRunHint />}
+
         {state === "playing" && !paused && (
           <div className="pointer-events-none absolute bottom-3 left-1/2 max-w-[85%] -translate-x-1/2 rounded-full bg-background/70 px-4 py-1.5 text-center text-xs text-muted-foreground backdrop-blur sm:bottom-4">
-            {ch.caption}
+            {pick(lang, ch.caption)}
           </div>
         )}
 
         {state === "playing" && paused && (
           <PauseMenu
-            muted={muted}
             onResume={() => setPaused(false)}
             onRestart={retry}
             onChapters={toChapters}
-            onMute={toggleMute}
+            onSettings={() => setSettingsOpen(true)}
           />
         )}
         {state === "ready" && (
@@ -450,6 +595,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
             unlocked={unlocked}
             onStart={() => goToChapter(0, true)}
             onSelect={(i) => goToChapter(i, true)}
+            onSettings={() => setSettingsOpen(true)}
           />
         )}
         {state === "intro" && <ChapterIntro chapter={ch} index={chapter} />}
@@ -481,6 +627,16 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
             onChapters={toChapters}
           />
         )}
+
+        <SettingsSheet
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          settings={settings}
+          hapticsAvailable={hapticsAvailable}
+          stats={stats}
+          onChange={changeSettings}
+          onReset={eraseProgress}
+        />
       </div>
     </div>
   );
