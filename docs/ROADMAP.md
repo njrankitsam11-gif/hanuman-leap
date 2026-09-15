@@ -123,7 +123,16 @@ can advertise a daily challenge and achievements rather than a bare eight-chapte
 
 ---
 
-## 3. Phase 8 — Replayability (before the public store launch)
+## 3. Phase 8 — Replayability (before the public store launch) — **8.1–8.6 shipped 2026-09-15**
+
+Shipped: `src/game/rng.ts` (mulberry32, FNV seed, IST day key), the `ENDLESS` chapter at
+`ENDLESS_INDEX` with a speed ramp (`mechanics.ts`) and cycling sky (`render/sky.ts`), Today's Leap
+(same seed per IST day, unlimited attempts, best-of-day in the save), 15 bilingual achievements
+(`achievements.ts`, evaluated on game events, toasted, listed in Settings), per-chapter stats table,
+and the share card (`share.ts`; image via Web Share files, else text+link, else clipboard; native
+uses `@capacitor/share`). Modes unlock at `MODES_UNLOCK_AT = 4` (Lankini's gate) rather than on the
+first win, so the daily is reachable earlier. **Not done:** 8.7 ghost replay — the flap log it needs
+is the same one Phase 9's leaderboard verification needs, so both land together.
 
 | #   | Item                                                                                                                             | Effort | Design notes                                                                                                                                                                                                              |
 | --- | -------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -194,5 +203,6 @@ Phase 6 ✅ → Phase 7 to TestFlight/Play-internal (≈ 1 week; needs Xcode/And
 developer accounts) → Phase 8 (≈ 1–2 weeks) → public store launch → Phase 9 and 10 as appetite and
 telemetry dictate.
 
-**Phase 7 is blocked on toolchains** (Xcode, Android Studio) and accounts; everything that could be
-done without them is committed. **Phase 8 (replayability) can start now** — it is pure web/game code.
+**Phase 7 is blocked on toolchains** (Xcode, Android Studio) and accounts; **Phase 8 is shipped**
+except ghost replay. Next unblocked work: Phase 10 content (Vibhishana and Vatika-vidhvans chapters
+with verified verses) or Phase 9 once a Neon account exists.

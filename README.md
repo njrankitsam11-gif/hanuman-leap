@@ -39,6 +39,19 @@ The UI, chapter prose, and verse meanings exist in Hindi and English
 (`src/i18n/strings.ts`, `src/game/chapters`). The language defaults to the
 browser's and can be switched in Settings. Verse text itself is always Devanagari.
 
+## Modes
+
+- **Story** — the eight chapters above, with progress and best punya saved.
+- **अखंड उड़ान · Endless Flight** — every obstacle kind returns on a random sea that
+  speeds up with distance while the sky cycles through the day; score is punya.
+- **आज की उड़ान · Today's Leap** — Endless with one seed per IST calendar day, so
+  everyone flies the same sea today; best-of-day is saved locally.
+
+Both unlock once Lankini's gate (chapter 5) is reachable. Fifteen achievements
+(bilingual) are earned along the way and listed in Settings with a per-chapter
+clears/falls table. Results can be shared as an image card (Web Share API), or as
+text and a link where images aren't supported.
+
 ## Verses
 
 Verse text is from the Sundarkand of Tulsidas's _Ramcharitmanas_ (Gita Press
@@ -82,6 +95,9 @@ upload. Never commit a release keystore (`*.jks` / `*.keystore` are ignored).
 ```
 src/game/
   engine.ts         pure simulation: step(world, input, dt, viewport) → events
+  rng.ts            mulberry32 + IST daily seed
+  achievements.ts   achievement rules (pure)
+  share.ts          share card + Web Share / clipboard
   chapters/         chapter data + verses (bilingual prose, Hindi भावार्थ)
   obstacles/        per-kind behaviour hooks (Mainaka, Surasa, Simhika, Lankini …)
   mechanics.ts      per-chapter hooks (tail fire, mirrored return)
