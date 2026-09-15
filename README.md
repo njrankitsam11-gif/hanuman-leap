@@ -10,7 +10,10 @@ eight chapters, each closing with a verse from Tulsidas's *Ramcharitmanas*.
 
 - **Tap / click / Space / ↑ / Enter** — rise
 - **P / Esc** — pause · **M** — mute
-- Works in portrait on phones and landscape on desktop; installable as a PWA.
+- Works in portrait on phones and landscape on desktop; installable as a PWA and
+  playable offline after the first visit.
+- **Settings** (gear on the start screen, or from Pause): sound, vibration,
+  *Sahaj* mode (wider gaps, slower sea), Hindi / English UI, journey stats, reset.
 - `?chapter=n` (0–7) opens a chapter directly.
 
 ## Chapters
@@ -27,8 +30,14 @@ eight chapters, each closing with a verse from Tulsidas's *Ramcharitmanas*.
 | 8 | प्रभु मिलन | Carry the Chudamani home to Ram |
 
 Punya is scored per obstacle (scaled by chapter), with bonuses for story beats,
-chapter clears, finishing, and a flawless (no-death) run. Progress and best score
-are saved in the browser.
+chapter clears, finishing, and a flawless (no-death) run. Progress, settings, and
+journey stats are saved in the browser (`storage.ts`, versioned with migrations).
+
+## Languages
+
+The UI, chapter prose, and verse meanings exist in Hindi and English
+(`src/i18n/strings.ts`, `src/game/chapters`). The language defaults to the
+browser's and can be switched in Settings. Verse text itself is always Devanagari.
 
 ## Verses
 
@@ -52,13 +61,22 @@ bun run preview
 ```
 src/game/
   engine.ts         pure simulation: step(world, input, dt, viewport) → events
-  chapters/         chapter data + verses
+  chapters/         chapter data + verses (bilingual prose, Hindi भावार्थ)
   obstacles/        per-kind behaviour hooks (Mainaka, Surasa, Simhika, Lankini …)
   mechanics.ts      per-chapter hooks (tail fire, mirrored return)
   render/           canvas drawing; never reads React state
   fx.ts             particles, flash, shake, wipe
   audio.ts          Web Audio synthesis (no audio files)
+  haptics.ts        vibration cues; backend swappable for the native build
   viewport.ts       responsive/retina logical viewport
-  storage.ts        localStorage save
-src/components/     React shell, HUD and screens
+  storage.ts        versioned localStorage save (v1 → v2 migration)
+src/i18n/           en/hi strings, LangProvider, useT()
+src/lib/analytics.ts  provider-agnostic track(); Vercel Web Analytics today
+src/lib/sw.ts + public/sw.js  offline service worker (production only)
+src/components/     React shell, HUD, screens, settings sheet
+docs/ROADMAP.md     next phases and the mobile-app plan
 ```
+
+Analytics events are anonymous (chapter indices, obstacle kinds, counts, UI
+language) and respect Do-Not-Track. Custom events show up on Vercel's Pro plan;
+page views on every plan.

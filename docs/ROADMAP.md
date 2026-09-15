@@ -21,10 +21,22 @@ Effort labels below: **S** ≈ one focused session, **M** ≈ 2–3 sessions, **
 
 ---
 
-## 1. Phase 6 — Foundations (recommended next phase)
+## 1. Phase 6 — Foundations — **shipped 2026-09-15** (branch `claude/next-phase-mobile-planning-178c16`)
 
 Small, unglamorous, and every item is either a prerequisite for the app or fixes something players hit
-today. Ship this first; it should take about a week of sessions.
+today. All nine items below are implemented; notes on what differed from the plan:
+
+- 6.1 `vite-plugin-pwa` was not used — a hand-written `public/sw.js` that populates its own precache
+  from the SSR HTML avoids any coupling to nitro's output. Versioned by `__BUILD_ID__` on the
+  registration URL. Verified by a vm-sandboxed test suite (the embedded browser can't install workers).
+- 6.4 Vercel Web Analytics behind `src/lib/analytics.ts`; custom events need Pro, page views don't.
+- 6.5 Save v2 also records journey stats (runs, leaps, deaths, wins, per-chapter clears/deaths),
+  shown in the Settings sheet — which covers most of 8.5 already.
+- 6.8 Only the position-independent gradients (sea strip, column bodies) are cached; the radial glows
+  depend on position/pulse and were left alone.
+- Still open from this phase: nothing. `vite preview` doesn't work with the nitro output (pre-existing);
+  use `NITRO_PRESET=node-server bun run build && PORT=8092 node .output/server/index.mjs` to try a
+  production build locally.
 
 | # | Item | Effort | Why now |
 |---|---|---|---|
@@ -167,5 +179,9 @@ Also:
 
 ## 7. Suggested order
 
-Phase 6 (≈ 1 week) → Phase 7 to TestFlight/Play-internal (≈ 1 week) → Phase 8 (≈ 1–2 weeks) →
-public store launch → Phase 9 and 10 as appetite and telemetry dictate.
+Phase 6 ✅ → Phase 7 to TestFlight/Play-internal (≈ 1 week; needs Xcode/Android Studio and the
+developer accounts) → Phase 8 (≈ 1–2 weeks) → public store launch → Phase 9 and 10 as appetite and
+telemetry dictate.
+
+**Next session starts with Phase 7 §2.2 steps 1–2** (native Vite entry + platform adapter), which
+need no accounts; `cap add ios/android` follows once the toolchains are confirmed on the machine.
