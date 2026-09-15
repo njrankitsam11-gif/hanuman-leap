@@ -161,7 +161,43 @@ export const CHAPTERS = [
 export const CHAPTER_COUNT = CHAPTERS.length;
 export const LAST_CHAPTER = CHAPTER_COUNT - 1;
 
-export const chapterAt = (i: number): Chapter => CHAPTERS[i] ?? CHAPTERS[0];
+/**
+ * अखंड उड़ान — the post-story mode. Not part of the arc: it lives at index
+ * ENDLESS_INDEX so the engine, HUD and save can address it like any chapter.
+ * Every kind but the boss returns; the ramp lives in mechanics.ts and the sky
+ * cycles with distance in the renderer.
+ */
+export const ENDLESS: Chapter = {
+  id: "endless",
+  title: { hi: "अखंड उड़ान", en: "Endless Flight" },
+  intro: {
+    hi: "राम-काज पूरा हुए बिना विश्राम कहाँ? जब तक उड़ सकें, समुद्र के ऊपर उड़ते रहें — हर बाधा फिर लौटेगी, हर बार और तेज़।",
+    en: "Until Ram's work is done, where is rest? Fly over the sea for as long as you can — every trial returns, faster each time.",
+  },
+  caption: { hi: "जितनी दूर उड़ सकें, उड़ें।", en: "Fly as far as you can." },
+  goal: { kind: "endless" },
+  difficulty: { speed: 0.4, spawn: 1.6, gap: 0.4, gapMin: 0.25 },
+  roster: [
+    ["cloud", 3],
+    ["wave", 2],
+    ["mainaka", 1],
+    ["surasa", 2],
+    ["simhika", 2],
+    ["rakshasa", 2],
+    ["tree", 2],
+    ["tower", 1],
+  ],
+  sky: "day",
+  scoreMul: 1.5,
+  verse: VERSES.mainaka,
+};
+
+export const ENDLESS_INDEX = CHAPTER_COUNT;
+
+export const chapterAt = (i: number): Chapter =>
+  i === ENDLESS_INDEX ? ENDLESS : (CHAPTERS[i] ?? CHAPTERS[0]);
+
+export const isEndless = (ch: Chapter) => ch.goal.kind === "endless";
 
 /** Roster passes needed before the chapter can resolve (a boss is extra). */
 export function targetPasses(ch: Chapter): number {
@@ -172,6 +208,8 @@ export function targetPasses(ch: Chapter): number {
       return ch.goal.after;
     case "finale":
       return ch.goal.passes;
+    case "endless":
+      return Infinity;
   }
 }
 

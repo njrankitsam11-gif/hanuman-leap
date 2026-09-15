@@ -23,10 +23,20 @@ export type ChapterGoal =
   /** Spawn `after` sentries from the roster, then one boss; clearing the boss completes the chapter. */
   | { kind: "boss"; after: number }
   /** After `passes`, spawning stops and a scripted scene plays before the chapter clears. */
-  | { kind: "finale"; passes: number; scene: "sita" | "ram" };
+  | { kind: "finale"; passes: number; scene: "sita" | "ram" }
+  /** Never clears; the run ends only on a hit. Difficulty ramps with passes. */
+  | { kind: "endless" };
 
 export type ChapterId =
-  "prelude" | "mainaka" | "surasa" | "simhika" | "lankini" | "vatika" | "dahan" | "return";
+  | "prelude"
+  | "mainaka"
+  | "surasa"
+  | "simhika"
+  | "lankini"
+  | "vatika"
+  | "dahan"
+  | "return"
+  | "endless";
 
 export type Localized = { hi: string; en: string };
 

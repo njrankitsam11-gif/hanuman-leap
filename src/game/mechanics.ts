@@ -25,9 +25,20 @@ const homeward: ChapterMechanic = {
   },
 };
 
+/** Endless: scroll speed climbs to ×(1 + ENDLESS_RAMP) over ENDLESS_RAMP_PASSES passes. */
+export const ENDLESS_RAMP = 0.6;
+export const ENDLESS_RAMP_PASSES = 60;
+
+const endless: ChapterMechanic = {
+  onUpdate: (world) => {
+    world.speedRamp = 1 + ENDLESS_RAMP * Math.min(1, world.passes / ENDLESS_RAMP_PASSES);
+  },
+};
+
 export const MECHANICS: Partial<Record<ChapterId, ChapterMechanic>> = {
   dahan,
   return: homeward,
+  endless,
 };
 
 /** Baseline every chapter starts from before its own hook runs. */

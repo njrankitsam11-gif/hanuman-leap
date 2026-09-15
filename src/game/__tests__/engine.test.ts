@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, chapterAt, targetPasses } from "../chapters";
+import { CHAPTERS, chapterAt, ENDLESS_INDEX, targetPasses } from "../chapters";
 import {
   CANON_LANDSCAPE,
   CANON_PORTRAIT,
@@ -24,6 +24,8 @@ import {
   startChapter,
   step,
 } from "../engine";
+import { ENDLESS_RAMP } from "../mechanics";
+import { mulberry32 } from "../rng";
 import type { GameEvent, World } from "../types";
 import { computeViewport } from "../viewport";
 
@@ -289,5 +291,54 @@ describe("easy (sahaj) mode", () => {
       chapterSpeed(ch, vp, normal) * EASY_SPEED_MUL,
       6,
     );
+  });
+});
+
+describe("endless mode", () => {
+  it("never reaches a goal, keeps spawning from the roster, and ramps speed with passes", () => {
+    const w = runningWorld(ENDLESS_INDEX);
+    const ch = chapterAt(ENDLESS_INDEX);
+    expect(ch.id).toBe("endless");
+    expect(targetPasses(ch)).toBe(Infinity);
+    expect(nextSpawnKind(w, ch)).not.toBeNull();
+    const v0 = chapterSpeed(ch, vp, w);
+    w.passes = 30;
+    step(w, noFlap, DT, vp); // mechanic runs inside step
+    w.vy = 0;
+    w.y = vp.h / 2;
+    expect(chapterSpeed(ch, vp, w)).toBeGreaterThan(v0);
+    w.passes = 10_000;
+    step(w, noFlap, DT, vp);
+    expect(w.speedRamp).toBeCloseTo(1 + ENDLESS_RAMP, 6);
+    expect(w.phase).toBe("run");
+    // a long survival never flips into a finale
+    w.y = vp.h / 2;
+    for (let i = 0; i < 600; i++) {
+      step(w, noFlap, DT, vp);
+      w.vy = 0;
+      w.y = vp.h / 2;
+      w.obstacles = []; // keep it alive; we only care about the phase
+    }
+    expect(w.phase).toBe("run");
+    expect(w.running).toBe(true);
+  });
+
+  it("a seeded rng makes the whole run reproducible", () => {
+    const a = createWorld(vp, mulberry32(99));
+    const b = createWorld(vp, mulberry32(99));
+    for (const w of [a, b]) {
+      startChapter(w, ENDLESS_INDEX, vp);
+      w.running = true;
+    }
+    for (let i = 0; i < 1200; i++) {
+      for (const w of [a, b]) {
+        step(w, i % 40 === 0 ? flap : noFlap, DT, vp);
+      }
+    }
+    expect(a.obstacles.map((o) => [o.kind, o.x, o.gapY, o.gapH])).toEqual(
+      b.obstacles.map((o) => [o.kind, o.x, o.gapY, o.gapH]),
+    );
+    expect(a.y).toBe(b.y);
+    expect(a.punya).toBe(b.punya);
   });
 });

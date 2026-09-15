@@ -5,7 +5,7 @@ import { drawBackground, drawSea } from "./background";
 import { drawHero } from "./hero";
 import { drawObstacle, drawObstacleFx, drawObstacleLabel } from "./obstacles";
 import { drawScene, drawSceneFront, sceneHeroX } from "./scene";
-import { drawSky } from "./sky";
+import { drawSky, endlessSky } from "./sky";
 
 export type RenderOpts = {
   /** Wall-clock ms, for cosmetic motion that shouldn't touch the simulation. */
@@ -41,7 +41,7 @@ export function render(
     ctx.scale(-1, 1);
   }
   drawBackground(ctx, assets.bg, world, vp);
-  drawSky(ctx, ch.sky, vp);
+  drawSky(ctx, ch.goal.kind === "endless" ? endlessSky(world.passes) : ch.sky, vp);
   drawScene(ctx, world, vp, ch);
   for (const o of world.obstacles) drawObstacle(ctx, o, world, vp);
   drawSea(ctx, world.scroll, vp);
