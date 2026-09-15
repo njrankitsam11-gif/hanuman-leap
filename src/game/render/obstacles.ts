@@ -271,9 +271,12 @@ function drawHouse(ctx: Ctx, o: Obstacle, vp: Viewport, t: number) {
   const k = KINDS.house;
   const sea = vp.h - vp.seaH;
   columnBody(ctx, o, vp, k.top, k.bottom);
-  // brick courses
+  // brick courses on the wall only, never across the open door
   ctx.fillStyle = "rgba(0,0,0,0.14)";
-  for (let y = 10; y < sea; y += 22) ctx.fillRect(o.x + 4, y, o.w - 8, 3);
+  for (let y = 10; y < sea; y += 22) {
+    if (y > o.gapY - 14 && y < o.gapY + o.gapH + 10) continue;
+    ctx.fillRect(o.x + 4, y, o.w - 8, 3);
+  }
   // decoy doorways: dark arches on solid wall
   for (const dy of o.decoys ?? []) {
     const y = dy * vp.h;
@@ -286,9 +289,9 @@ function drawHouse(ctx: Ctx, o: Obstacle, vp: Viewport, t: number) {
     ctx.closePath();
     ctx.fill();
   }
-  // lintel and threshold of the real door
+  // lintel (carrying राम) and threshold of the real door
   ctx.fillStyle = "#e9c265";
-  ctx.fillRect(o.x - 4, o.gapY - 10, o.w + 8, 10);
+  ctx.fillRect(o.x - 4, o.gapY - 18, o.w + 8, 18);
   ctx.fillRect(o.x - 4, o.gapY + o.gapH, o.w + 8, 8);
   // Tulsi in a pot on the threshold
   const px = o.x + o.w / 2;
@@ -305,12 +308,13 @@ function drawHouse(ctx: Ctx, o: Obstacle, vp: Viewport, t: number) {
     ctx.arc(px + dx, py + dyy, r, 0, Math.PI * 2);
     ctx.fill();
   }
-  // राम on the lintel, glowing softly
-  const pulse = 0.75 + 0.25 * Math.sin(t * 3);
-  ctx.fillStyle = `rgba(255, 245, 200, ${pulse})`;
-  ctx.font = '700 15px "Noto Sans Devanagari", system-ui, sans-serif';
+  // राम carved into the lintel, glowing softly
+  const pulse = 0.6 + 0.4 * Math.sin(t * 3);
+  ctx.fillStyle = `rgba(120, 50, 10, ${pulse})`;
+  ctx.font = '700 14px "Noto Sans Devanagari", system-ui, sans-serif';
   ctx.textAlign = "center";
-  ctx.fillText("राम", px, o.gapY - 16);
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText("राम", px, o.gapY - 4);
 }
 
 /** An Ashoka vriksha: standing, or torn down by the hero. */
@@ -348,6 +352,13 @@ function drawVriksha(ctx: Ctx, o: Obstacle, vp: Viewport) {
 function drawAstra(ctx: Ctx, o: Obstacle, vp: Viewport, t: number) {
   const sea = vp.h - vp.seaH;
   const shaft = (x: number, y0: number, y1: number, down: boolean) => {
+    // dark outline so the gold reads against a bright sky
+    ctx.strokeStyle = "#3a2408";
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(x, y0);
+    ctx.lineTo(x, y1);
+    ctx.stroke();
     ctx.strokeStyle = "#e9c265";
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -357,11 +368,18 @@ function drawAstra(ctx: Ctx, o: Obstacle, vp: Viewport, t: number) {
     // head at the gap edge, fletching at the far end
     const tip = down ? y1 : y0;
     const dir = down ? 1 : -1;
+    ctx.fillStyle = "#3a2408";
+    ctx.beginPath();
+    ctx.moveTo(x, tip + dir * 12);
+    ctx.lineTo(x - 8, tip - dir * 4);
+    ctx.lineTo(x + 8, tip - dir * 4);
+    ctx.closePath();
+    ctx.fill();
     ctx.fillStyle = "#fff0b0";
     ctx.beginPath();
-    ctx.moveTo(x, tip + dir * 8);
-    ctx.lineTo(x - 5, tip - dir * 4);
-    ctx.lineTo(x + 5, tip - dir * 4);
+    ctx.moveTo(x, tip + dir * 9);
+    ctx.lineTo(x - 5, tip - dir * 3);
+    ctx.lineTo(x + 5, tip - dir * 3);
     ctx.closePath();
     ctx.fill();
     const tail = down ? y0 : y1;
@@ -374,17 +392,17 @@ function drawAstra(ctx: Ctx, o: Obstacle, vp: Viewport, t: number) {
     ctx.lineTo(x + 6, tail - dir * 10);
     ctx.stroke();
   };
-  const n = 4;
+  // the volley darkens the air it fills
+  ctx.fillStyle = "rgba(60, 30, 0, 0.22)";
+  ctx.fillRect(o.x - 4, 0, o.w + 8, o.gapY);
+  ctx.fillRect(o.x - 4, o.gapY + o.gapH, o.w + 8, sea - o.gapY - o.gapH);
+  const n = 5;
   for (let i = 0; i < n; i++) {
-    const x = o.x + 12 + (i * (o.w - 24)) / (n - 1);
+    const x = o.x + 10 + (i * (o.w - 20)) / (n - 1);
     const wobble = Math.sin(t * 7 + i) * 3;
     shaft(x, -20, o.gapY - 8 + wobble, true);
     shaft(x, o.gapY + o.gapH + 8 - wobble, sea + 20, false);
   }
-  // heat shimmer where the volley is densest
-  ctx.fillStyle = "rgba(255, 215, 94, 0.12)";
-  ctx.fillRect(o.x, 0, o.w, o.gapY);
-  ctx.fillRect(o.x, o.gapY + o.gapH, o.w, sea - o.gapY - o.gapH);
 }
 
 /** Golden tower with battlements and flames at the cut. */

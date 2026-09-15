@@ -178,14 +178,14 @@ function drawCapture(ctx: Ctx, world: World, vp: Viewport, heroX: number) {
   }
   const k = clamp01((t - ASTRA_HIT) / 0.6);
   const glow = ctx.createRadialGradient(heroX, world.y, 6, heroX, world.y, 90);
-  glow.addColorStop(0, `rgba(255, 220, 120, ${0.5 * k})`);
+  glow.addColorStop(0, `rgba(255, 220, 120, ${0.3 * k})`);
   glow.addColorStop(1, "rgba(255, 220, 120, 0)");
   ctx.fillStyle = glow;
   ctx.beginPath();
   ctx.arc(heroX, world.y, 90, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = `rgba(255, 215, 94, ${0.9 * k})`;
-  ctx.lineWidth = 5;
+  ctx.strokeStyle = `rgba(255, 215, 94, ${0.85 * k})`;
+  ctx.lineWidth = 3.5;
   for (let i = 0; i < 4; i++) {
     const rx = 48 - i * 4;
     const ry = 12 + i * 2;
