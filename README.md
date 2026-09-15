@@ -4,7 +4,7 @@
 
 A one-tap flying game (Flappy Bird style) that retells the **Sundarkand** — Hanuman's
 leap across the sea to find Sita, the burning of Lanka, and the return to Ram — in
-eight chapters, each closing with a verse from Tulsidas's _Ramcharitmanas_.
+ten chapters, each closing with a verse from Tulsidas's _Ramcharitmanas_.
 
 ## Play
 
@@ -18,16 +18,18 @@ eight chapters, each closing with a verse from Tulsidas's _Ramcharitmanas_.
 
 ## Chapters
 
-| #   | Chapter          | What happens                                                     |
-| --- | ---------------- | ---------------------------------------------------------------- |
-| 1   | जामवंत का उत्साह | Spring from Mahendra Parvata through the clouds                  |
-| 2   | मैनाक का सत्कार  | Mainaka rises to offer rest — touch the peak for punya           |
-| 3   | सुरसा की परीक्षा | Her mouth closes as you near; shrink to a thumb and slip through |
-| 4   | सिंहिका की छाया  | Her shadow drags you down; flap harder                           |
-| 5   | लंकिनी का द्वार  | Past the rakshasa sentries to the guardian of the gate           |
-| 6   | अशोक वाटिका      | Thread the Ashoka trees; drop the ring to Sita                   |
-| 7   | लंका दहन         | Tail afire, leap the towers as Lanka burns                       |
-| 8   | प्रभु मिलन       | Carry the Chudamani home to Ram                                  |
+| #   | Chapter          | What happens                                                                           |
+| --- | ---------------- | -------------------------------------------------------------------------------------- |
+| 1   | जामवंत का उत्साह | Spring from Mahendra Parvata through the clouds                                        |
+| 2   | मैनाक का सत्कार  | Mainaka rises to offer rest — touch the peak for punya                                 |
+| 3   | सुरसा की परीक्षा | Her mouth closes as you near; shrink to a thumb and slip through                       |
+| 4   | सिंहिका की छाया  | Her shadow drags you down; flap harder                                                 |
+| 5   | लंकिनी का द्वार  | Past the rakshasa sentries to the guardian of the gate                                 |
+| 6   | विभीषण मिलन      | Night streets of Lanka — only the door marked with Tulsi and राम is open               |
+| 7   | अशोक वाटिका      | Thread the Ashoka trees; drop the ring to Sita                                         |
+| 8   | वाटिका विध्वंस   | Tear down the trees for punya, dodge Meghnad's arrows — until the Brahmastra binds you |
+| 9   | लंका दहन         | Tail afire, leap the towers as Lanka burns                                             |
+| 10  | प्रभु मिलन       | Carry the Chudamani home to Ram                                                        |
 
 Punya is scored per obstacle (scaled by chapter), with bonuses for story beats,
 chapter clears, finishing, and a flawless (no-death) run. Progress, settings, and
@@ -41,13 +43,13 @@ browser's and can be switched in Settings. Verse text itself is always Devanagar
 
 ## Modes
 
-- **Story** — the eight chapters above, with progress and best punya saved.
+- **Story** — the ten chapters above, with progress and best punya saved.
 - **अखंड उड़ान · Endless Flight** — every obstacle kind returns on a random sea that
   speeds up with distance while the sky cycles through the day; score is punya.
 - **आज की उड़ान · Today's Leap** — Endless with one seed per IST calendar day, so
   everyone flies the same sea today; best-of-day is saved locally.
 
-Both unlock once Lankini's gate (chapter 5) is reachable. Fifteen achievements
+Both unlock once Lankini's gate (chapter 5) is reachable. Seventeen achievements
 (bilingual) are earned along the way and listed in Settings with a per-chapter
 clears/falls table. Results can be shared as an image card (Web Share API), or as
 text and a link where images aren't supported.

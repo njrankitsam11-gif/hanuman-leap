@@ -86,7 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "A one-tap flying game through eight chapters of the Sundarkand, with Tulsidas's verses.",
+          "A one-tap flying game through ten chapters of the Sundarkand, with Tulsidas's verses.",
       },
       { name: "theme-color", content: "#e07c28" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
@@ -96,7 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "A one-tap flying game through eight chapters of the Sundarkand, with Tulsidas's verses.",
+          "A one-tap flying game through ten chapters of the Sundarkand, with Tulsidas's verses.",
       },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://hanuman-leap.vercel.app/og.jpg" },

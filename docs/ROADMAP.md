@@ -159,7 +159,15 @@ Effort: M. Depends on 8.1, 8.3, 8.7.
 
 ---
 
-## 5. Phase 10 — Content and art
+## 5. Phase 10 — Content and art — **the two chapters shipped 2026-09-15**
+
+Shipped: **विभीषण मिलन** (index 5; `house` columns with a Tulsi/राम-marked door and painted decoy
+doorways, rakshasa sentries; verses दोहा 5 · चौपाई 6.1 and intro चौपाई 5.8) and **वाटिका विध्वंस**
+(index 7; `vriksha` trees are torn down for `SMASH_PUNYA` via a new `smash` collision result, `astra`
+volleys with a narrower gap, and a `capture` finale where the Brahmastra binds Hanuman before Lanka
+Dahan; verses चौपाई 18.1–18.2 and दोहा 19). All four verses were cross-checked against
+drikpanchang.com and shrirammitramandal.com. Save v3 remaps chapter indices from the 8-chapter arc.
+Remaining here: Madhuvan, Setu-bandh, the Verse Pothi, the art pass, music, kid mode.
 
 New chapters in Tulsidas's order, each needing a verified verse (same cross-check process as
 `verses.ts`, `verified: true` enforced by tests):
@@ -203,6 +211,6 @@ Phase 6 ✅ → Phase 7 to TestFlight/Play-internal (≈ 1 week; needs Xcode/And
 developer accounts) → Phase 8 (≈ 1–2 weeks) → public store launch → Phase 9 and 10 as appetite and
 telemetry dictate.
 
-**Phase 7 is blocked on toolchains** (Xcode, Android Studio) and accounts; **Phase 8 is shipped**
-except ghost replay. Next unblocked work: Phase 10 content (Vibhishana and Vatika-vidhvans chapters
-with verified verses) or Phase 9 once a Neon account exists.
+**Phase 7 is blocked on toolchains** (Xcode, Android Studio) and accounts; **Phase 8 and the two
+Phase 10 chapters are shipped**. Next unblocked work: the Verse Pothi and synthesized music (Phase 10),
+or Phase 9 once a Neon account exists.

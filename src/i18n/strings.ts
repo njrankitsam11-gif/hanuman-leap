@@ -13,7 +13,7 @@ const en = {
     "Space / tap to rise · P to pause · M to mute · verses from Tulsidas's Ramcharitmanas",
 
   "start.blurb":
-    "Carry Lord Ram's ring across the sea to Sita Maa, set Lanka ablaze, and bring her crest-jewel home — through eight chapters of the Sundarkand.",
+    "Carry Lord Ram's ring across the sea to Sita Maa, set Lanka ablaze, and bring her crest-jewel home — through ten chapters of the Sundarkand.",
   "start.begin": "Begin the leap",
   "start.orChoose": "or choose a chapter",
   "start.controls": "Space or tap to rise · P pause · M mute",
@@ -101,7 +101,7 @@ const hi: Record<StringKey, string> = {
   "app.footer": "Space या टैप से उड़ान · P विराम · M मौन · चौपाइयाँ तुलसीदास की रामचरितमानस से",
 
   "start.blurb":
-    "प्रभु राम की मुद्रिका लेकर समुद्र पार सीता माँ तक पहुँचें, लंका जलाएँ और उनकी चूड़ामणि लेकर लौटें — सुंदरकांड के आठ अध्यायों में।",
+    "प्रभु राम की मुद्रिका लेकर समुद्र पार सीता माँ तक पहुँचें, लंका जलाएँ और उनकी चूड़ामणि लेकर लौटें — सुंदरकांड के दस अध्यायों में।",
   "start.begin": "छलाँग लगाएँ",
   "start.orChoose": "या अध्याय चुनें",
   "start.controls": "Space या टैप से उड़ान · P विराम · M मौन",
