@@ -1,4 +1,6 @@
+import { useState } from "react";
 import HanumanLeap from "@/components/HanumanLeap";
+import Landing from "@/components/Landing";
 import { LangProvider, useLang } from "@/i18n";
 
 export function NativeApp() {
@@ -12,6 +14,9 @@ export function NativeApp() {
 /** Full-bleed game box padded by the device's safe areas (notch, home indicator). */
 function Shell() {
   const { lang } = useLang();
+  // Same title page as the web: shown on every launch until Play.
+  const [playing, setPlaying] = useState(false);
+  if (!playing) return <Landing onPlay={() => setPlaying(true)} />;
   return (
     <main
       lang={lang}

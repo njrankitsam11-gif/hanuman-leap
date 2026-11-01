@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import HanumanLeap from "@/components/HanumanLeap";
+import Landing from "@/components/Landing";
 import { LangProvider, useLang, useT } from "@/i18n";
 
 /** `?chapter=n` jumps straight to a chapter's intro — handy for testing later chapters. */
@@ -49,6 +51,9 @@ function Page() {
   const { chapter } = Route.useSearch();
   const { lang } = useLang();
   const t = useT();
+  // The landing page greets every visit; `?chapter=n` skips it for testing.
+  const [playing, setPlaying] = useState(chapter !== undefined);
+  if (!playing) return <Landing onPlay={() => setPlaying(true)} />;
   return (
     <main
       lang={lang}

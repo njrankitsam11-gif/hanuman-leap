@@ -159,3 +159,60 @@
       system-ui, sans-serif;
   }
 }
+
+/* Landing page artwork motion (src/components/Landing.tsx). */
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(2deg);
+  }
+}
+@keyframes landing-glow {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes landing-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(40px);
+  }
+}
+@keyframes landing-pulse {
+  0%,
+  100% {
+    box-shadow: 0 8px 30px rgba(234, 88, 12, 0.6);
+  }
+  50% {
+    box-shadow: 0 8px 44px rgba(255, 170, 60, 0.9);
+  }
+}
+.landing-float {
+  animation: landing-float 5s ease-in-out infinite;
+}
+.landing-glow {
+  animation: landing-glow 6s ease-in-out infinite;
+}
+.landing-drift {
+  animation: landing-drift 14s ease-in-out infinite alternate;
+}
+.landing-drift-slow {
+  animation: landing-drift 22s ease-in-out infinite alternate-reverse;
+}
+.landing-pulse {
+  animation: landing-pulse 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing * {
+    animation: none !important;
+  }
+}

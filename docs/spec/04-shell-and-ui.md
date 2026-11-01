@@ -111,7 +111,7 @@ Caption pill (chapter `caption`) shows under the canvas while playing and unpaus
 
 ## Layout
 
-Web route `src/routes/index.tsx`: `h-dvh` column, safe-area padding; desktop landscape adds a
+Web route `src/routes/index.tsx` first renders `Landing` (full-screen artwork + Play; skipped when `?chapter=n` is set), then the game: `h-dvh` column, safe-area padding; desktop landscape adds a
 header/footer and caps the box at 1000 px. Native `NativeApp` is the same shell without the header.
 The game box is sized from `computeViewport` (`box` state); before measurement it falls back to
 `aspect-[900/560]`.
