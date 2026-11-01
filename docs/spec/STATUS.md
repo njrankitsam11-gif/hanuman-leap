@@ -23,7 +23,8 @@ entries go at the bottom of §5._
 | 7         | Capacitor shell: native Vite entry, platform seam, config, `ios/` (SPM) + `android/`, icons/splash. **Not compiled** (no toolchains)                                                       | feature branch |
 | 8         | Seeded PRNG, Endless Flight, Today's Leap (IST), 17 achievements + toasts, share card, per-chapter stats; modes unlock at chapter 4                                                        | feature branch |
 | 10 (part) | Two new chapters — विभीषण मिलन (5) and वाटिका विध्वंस (7): kinds `house/vriksha/astra`, `smash` result, `capture` finale; save v3 remap                                                    | feature branch |
-| Landing   | Full-screen first page (`src/components/Landing.tsx`): painted dawn, Hanuman mid-leap, Lanka skyline, launch verse, Play → game; `?chapter=n` skips it; web + native shell           | this branch    |
+| Landing   | Full-screen first page (`src/components/Landing.tsx`): painted dawn, Hanuman mid-leap, Lanka skyline, launch verse, Play → game; `?chapter=n` skips it; web + native shell                 | this branch    |
+| Music     | Tanpura drone + per-chapter raga phrase, synthesized (`src/game/music.ts`); Music switch in Settings; `save.music`                                                                         | this branch    |
 | Specs     | `CLAUDE.md` + `docs/spec/*` (this set)                                                                                                                                                     | this branch    |
 
 ## 3. In flight
@@ -34,8 +35,7 @@ _(nothing)_
 
 1. **Merge** the feature branch into `main` and push (fast-forward; Lovable-safe) so the live site
    gets Phases 6–10. Needs owner go-ahead for the push.
-2. Phase 10 remainder: Verse Pothi (verse library), synthesized music (tanpura drone + motif,
-   separate toggle), kid mode, Madhuvan / Setu-bandh chapters, art pass.
+2. Phase 10 remainder: Verse Pothi (verse library), kid mode, Madhuvan / Setu-bandh chapters, art pass.
 3. Phase 8.7 ghost replay + Phase 9 leaderboard — together, once a Neon account exists (flap log
    - server re-simulation).
 4. Phase 7 steps 5–8 (TestFlight / Play internal, store kit, `/privacy` page) — blocked on the
@@ -57,3 +57,11 @@ _(nothing)_
   the TanStack 1.168.60 bump (pre-existing, not from this change).
 - **2026-11-01** — Native shell (`src/native/NativeApp.tsx`) now shows the same `Landing` before
   the game. `build:native` OK; still not compiled on device (no Xcode/Android Studio here).
+- **2026-11-01** — Background music: new `src/game/music.ts` (pure `TUNES`/`phrase`/`TANPURA` +
+  look-ahead Web Audio scheduler on `audio.ts`'s master via new `audioGraph()`), `save.music`
+  (backfilled, no version bump), Music switch in `SettingsSheet` (disabled while Sound is off),
+  `settings.music` strings, `track` key `music`, shell effect in `HanumanLeap.tsx`. New
+  `music.test.ts` + storage case → 13 files, 90 tests. Verified in the pane: tanpura plucks
+  scheduled while flying, none while paused or with Music off; setting persists. Gotcha: port
+  8091 can be held by another checkout's dev server — Vite silently moves to 8092, so check the
+  log before testing.

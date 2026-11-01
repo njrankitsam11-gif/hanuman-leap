@@ -10,7 +10,8 @@ Every access is guarded (SSR, Safari private mode, corrupt JSON → fresh save).
 - `SaveV1 {v:1, best, muted, unlockedChapter}` — Phases 1–5 (8-chapter arc).
 - `SaveV2` — adds `haptics, lang, easy, hinted, stats, endlessBest, daily{date,best}, achievements[]`
   (8-chapter indices).
-- `SaveV3 = SaveV2 with v:3` — **10-chapter indices**. `Save = SaveV3`, `DEFAULT_SAVE`.
+- `SaveV3 = SaveV2 with v:3` — **10-chapter indices**. `music: boolean` (default `true`) was added
+  2026-11-01 without a version bump: `backfill` fills it for older saves. `Save = SaveV3`, `DEFAULT_SAVE`.
 - `Stats {runs, leaps, deaths, wins, flawless, chapters: {clears, deaths}[]}`.
 
 ### `migrate(raw, fresh)` accepts every shape ever shipped
@@ -33,16 +34,16 @@ empty localStorage at boot (Capacitor Preferences, see 06).
 
 ### Who writes what
 
-| Field                | Written by                                                            |
-| -------------------- | --------------------------------------------------------------------- |
-| `best`               | `recordBest` on hit/clear/won (story only)                            |
-| `unlockedChapter`    | chapterClear (`chapter+1`), won (`LAST_CHAPTER`)                      |
-| `muted/haptics/easy` | `changeSettings` / `toggleMute`                                       |
-| `lang`               | `LangProvider.setLang`                                                |
-| `hinted`             | `markHinted` (3 flaps or first pass/hit)                              |
-| `stats`              | `commitStats` on run start, hit, clear, won (leaps buffered in a ref) |
-| `endlessBest/daily`  | hit in the respective mode                                            |
-| `achievements`       | `award`                                                               |
+| Field                      | Written by                                                            |
+| -------------------------- | --------------------------------------------------------------------- |
+| `best`                     | `recordBest` on hit/clear/won (story only)                            |
+| `unlockedChapter`          | chapterClear (`chapter+1`), won (`LAST_CHAPTER`)                      |
+| `muted/music/haptics/easy` | `changeSettings` / `toggleMute`                                       |
+| `lang`                     | `LangProvider.setLang`                                                |
+| `hinted`                   | `markHinted` (3 flaps or first pass/hit)                              |
+| `stats`                    | `commitStats` on run start, hit, clear, won (leaps buffered in a ref) |
+| `endlessBest/daily`        | hit in the respective mode                                            |
+| `achievements`             | `award`                                                               |
 
 ## Achievements (`src/game/achievements.ts`)
 

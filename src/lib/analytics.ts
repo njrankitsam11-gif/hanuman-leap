@@ -18,7 +18,7 @@ export type AnalyticsEvent =
   | { name: "chapter_clear"; chapter: number; deaths: number; punya: number }
   | { name: "death"; chapter: number; kind: ObstacleKindId | "wall"; passes: number }
   | { name: "won"; deaths: number; punya: number; easy: boolean }
-  | { name: "settings"; key: "muted" | "haptics" | "easy" | "lang"; value: string }
+  | { name: "settings"; key: "muted" | "music" | "haptics" | "easy" | "lang"; value: string }
   | { name: "install" };
 
 let ready = false;

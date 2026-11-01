@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { loadAssets } from "@/game/assets";
 import { playSfx, setAmbience, setMuted, unlockAudio } from "@/game/audio";
+import { setMusic, setMusicEnabled } from "@/game/music";
 import { evaluate, type AchievementEvent, type Mode } from "@/game/achievements";
 import { CHAPTER_COUNT, chapterAt, ENDLESS_INDEX, LAST_CHAPTER } from "@/game/chapters";
 import { DEATH_COOLDOWN_MS, MAX_DT, MAX_SUBSTEPS, STEP } from "@/game/constants";
@@ -89,7 +90,12 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
   const [deaths, setDeaths] = useState(0);
   const [best, setBest] = useState(0);
   const [unlocked, setUnlocked] = useState(0);
-  const [settings, setSettings] = useState<Settings>({ muted: false, haptics: true, easy: false });
+  const [settings, setSettings] = useState<Settings>({
+    muted: false,
+    music: true,
+    haptics: true,
+    easy: false,
+  });
   const [stats, setStats] = useState<Stats>(DEFAULT_STATS);
   const [hapticsAvailable, setHapticsAvailable] = useState(false);
   const [mode, setMode] = useState<Mode>("story");
@@ -347,6 +353,12 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
         applyMuted(patch.muted);
         track({ name: "settings", key: "muted", value: String(patch.muted) });
       }
+      if (patch.music !== undefined) {
+        setMusicEnabled(patch.music);
+        setSettings((s) => ({ ...s, music: patch.music! }));
+        saveGame({ music: patch.music });
+        track({ name: "settings", key: "music", value: String(patch.music) });
+      }
       if (patch.haptics !== undefined) {
         setHapticsEnabled(patch.haptics);
         setSettings((s) => ({ ...s, haptics: patch.haptics! }));
@@ -402,6 +414,17 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     setAmbience(fire ? "fire" : null);
   }, [state, paused, chapter]);
 
+  // Music through the chapter card, the flight and the verse screen; silent when paused or fallen.
+  useEffect(() => {
+    const on =
+      (state === "playing" && !paused) ||
+      state === "intro" ||
+      state === "chapterClear" ||
+      state === "won";
+    setMusic(on ? chapterAt(chapter).id : null);
+  }, [state, paused, chapter]);
+  useEffect(() => () => setMusic(null), []);
+
   // Persisted values are read on the client only, after hydration.
   useEffect(() => {
     const save = loadSave();
@@ -412,7 +435,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     worldRef.current.easy = save.easy;
     setBest(save.best);
     setUnlocked(save.unlockedChapter);
-    setSettings({ muted: save.muted, haptics: save.haptics, easy: save.easy });
+    setSettings({ muted: save.muted, music: save.music, haptics: save.haptics, easy: save.easy });
     setStats(save.stats);
     statsRef.current = save.stats;
     setEndlessBest(save.endlessBest);
@@ -421,6 +444,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     setAchievements(save.achievements);
     setHinted(save.hinted);
     setMuted(save.muted);
+    setMusicEnabled(save.music);
     setHapticsEnabled(save.haptics);
     setHapticsAvailable(hapticsSupported());
     if (initialChapter !== undefined) {
