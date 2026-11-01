@@ -28,12 +28,20 @@ export function drawBackground(
   ctx.drawImage(bg, dw - off, dy, dw, dh);
 }
 
+/** The sea gradient only changes with the viewport, not per frame (one per context). */
+const seaGrads = new WeakMap<CanvasRenderingContext2D, { key: string; grad: CanvasGradient }>();
+
 export function drawSea(ctx: CanvasRenderingContext2D, scroll: number, vp: Viewport) {
   const top = vp.h - vp.seaH;
-  const seaGrad = ctx.createLinearGradient(0, top, 0, vp.h);
-  seaGrad.addColorStop(0, "#1f7d8c");
-  seaGrad.addColorStop(1, "#0d4a57");
-  ctx.fillStyle = seaGrad;
+  const key = `${top}:${vp.h}`;
+  let sea = seaGrads.get(ctx);
+  if (!sea || sea.key !== key) {
+    const grad = ctx.createLinearGradient(0, top, 0, vp.h);
+    grad.addColorStop(0, "#1f7d8c");
+    grad.addColorStop(1, "#0d4a57");
+    seaGrads.set(ctx, (sea = { key, grad }));
+  }
+  ctx.fillStyle = sea.grad;
   ctx.fillRect(0, top, vp.w, vp.seaH);
 
   ctx.strokeStyle = "rgba(255,255,255,0.35)";

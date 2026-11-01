@@ -10,7 +10,9 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { initAnalytics, track } from "../lib/analytics";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { registerServiceWorker } from "../lib/sw";
 
 function NotFoundComponent() {
   return (
@@ -84,7 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "A one-tap flying game through eight chapters of the Sundarkand, with Tulsidas's verses.",
+          "A one-tap flying game through ten chapters of the Sundarkand, with Tulsidas's verses.",
       },
       { name: "theme-color", content: "#e07c28" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
@@ -94,7 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "A one-tap flying game through eight chapters of the Sundarkand, with Tulsidas's verses.",
+          "A one-tap flying game through ten chapters of the Sundarkand, with Tulsidas's verses.",
       },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://hanuman-leap.vercel.app/og.jpg" },
@@ -107,12 +109,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: appCss,
-      },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "icon", href: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
@@ -142,6 +138,15 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Page views from here on; "install" fires when the PWA is added to a home screen.
+  useEffect(() => {
+    initAnalytics();
+    registerServiceWorker();
+    const onInstalled = () => track({ name: "install" });
+    window.addEventListener("appinstalled", onInstalled);
+    return () => window.removeEventListener("appinstalled", onInstalled);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

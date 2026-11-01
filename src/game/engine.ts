@@ -2,6 +2,7 @@ import { CHAPTERS, chapterAt, finaleDuration, targetPasses, type Chapter } from 
 import type { ObstacleKindId } from "./chapters/types";
 import {
   DESPAWN_X,
+  EASY_SPEED_MUL,
   FLAP_H,
   GAP_SHRINK_PER_LEAP_FRAC,
   GRAVITY_H,
@@ -13,7 +14,14 @@ import {
 } from "./constants";
 import { KINDS } from "./kinds";
 import { MECHANICS, resetChapterEffects } from "./mechanics";
-import { BEHAVIOURS, COLLECT_PUNYA, columnCollide, heroHitbox } from "./obstacles/registry";
+import {
+  BEHAVIOURS,
+  COLLECT_PUNYA,
+  columnCollide,
+  gapMul,
+  heroHitbox,
+  SMASH_PUNYA,
+} from "./obstacles/registry";
 import type { GameEvent, Input, Obstacle, Viewport, World } from "./types";
 
 /**
@@ -48,6 +56,7 @@ export function createWorld(vp: Viewport, rng: () => number = Math.random): Worl
     chapter: 0,
     passes: 0,
     leaps: 0,
+    smashes: 0,
     punya: 0,
     punyaAtChapterStart: 0,
     bossSpawned: false,
@@ -58,6 +67,7 @@ export function createWorld(vp: Viewport, rng: () => number = Math.random): Worl
     tailFire: false,
     dir: 1,
     speedRamp: 1,
+    easy: false,
     rng,
   };
 }
@@ -66,6 +76,7 @@ export function createWorld(vp: Viewport, rng: () => number = Math.random): Worl
 export function startChapter(world: World, index: number, vp: Viewport) {
   world.chapter = index;
   world.passes = 0;
+  world.smashes = 0;
   world.obstacles = [];
   world.spawnTimer = 0;
   world.punyaAtChapterStart = world.punya;
@@ -88,7 +99,11 @@ export function retryChapter(world: World, vp: Viewport) {
 }
 
 export const chapterSpeed = (ch: Chapter, vp: Viewport, world?: World) =>
-  ch.difficulty.speed * vp.h * vp.speedMul * (world?.speedRamp ?? 1);
+  ch.difficulty.speed *
+  vp.h *
+  vp.speedMul *
+  (world?.speedRamp ?? 1) *
+  (world?.easy ? EASY_SPEED_MUL : 1);
 
 function pickFromRoster(world: World, ch: Chapter): ObstacleKindId {
   let total = 0;
@@ -117,7 +132,7 @@ export function spawnObstacle(
   kind: ObstacleKindId,
 ): Obstacle {
   const shrink = world.passes * GAP_SHRINK_PER_LEAP_FRAC;
-  const gapH = Math.max(ch.difficulty.gapMin, ch.difficulty.gap - shrink) * vp.h;
+  const gapH = Math.max(ch.difficulty.gapMin, ch.difficulty.gap - shrink) * vp.h * gapMul(world);
   const top = SPAWN_MARGIN_TOP_FRAC * vp.h;
   const span = SPAWN_MARGIN_SPAN_FRAC * vp.h;
   const gapY = top + world.rng() * (vp.h - span - gapH);
@@ -240,25 +255,29 @@ export function step(world: World, input: Input, dt: number, vp: Viewport): Game
   world.obstacles = world.obstacles.filter((o) => o.x > DESPAWN_X);
 
   // Collisions: walls, then each column's own rule.
-  let hit = hitsWalls(world, vp);
+  let hit: ObstacleKindId | "wall" | null = hitsWalls(world, vp) ? "wall" : null;
   if (!hit) {
     const hero = heroHitbox(world, vp);
     for (const o of world.obstacles) {
       const result = (BEHAVIOURS[o.kind]?.collide ?? columnCollide)(o, hero, vp);
       if (result === "hit") {
-        hit = true;
+        hit = o.kind;
         break;
       }
       if (result === "collect") {
         world.punya += COLLECT_PUNYA;
         events.push({ type: "collect", punya: world.punya });
+      } else if (result === "smash") {
+        world.punya += SMASH_PUNYA;
+        world.smashes += 1;
+        events.push({ type: "smash", punya: world.punya, x: o.x + o.w / 2, y: hero.y });
       }
     }
   }
   if (hit) {
     world.running = false;
     world.deaths += 1;
-    events.push({ type: "hit", punya: world.punya });
+    events.push({ type: "hit", punya: world.punya, by: hit });
     return events;
   }
 

@@ -1,11 +1,11 @@
 import type { Chapter, ObstacleKindId } from "../chapters/types";
-import { HERO_R, OB_W, SWAY_RATE } from "../constants";
+import { EASY_GAP_MUL, HERO_R, OB_W, SWAY_RATE } from "../constants";
 import { KINDS } from "../kinds";
 import type { Obstacle, Viewport, World } from "../types";
 
 /** Hero hitbox: centre and AABB half-size (already scaled). */
 export type Hitbox = { x: number; y: number; r: number };
-export type CollideResult = "none" | "hit" | "collect";
+export type CollideResult = "none" | "hit" | "collect" | "smash";
 
 /**
  * Per-kind hooks the engine calls without knowing what the kind is. Everything is
@@ -43,6 +43,14 @@ export const LANKINI_WIDTH_MUL = 1.6;
 export const LANKINI_GAP = 0.3;
 
 export const MAINAKA_PEAK_R = 30;
+/** Vatika-vidhvans: punya for tearing down a vriksha (more than a pass is worth). */
+export const SMASH_PUNYA = 30;
+/** Meghnad's volley leaves a tighter opening than the chapter's gap. */
+export const ASTRA_GAP_MUL = 0.85;
+/** Painted doorways on a house, ·H from the column top / above the sea. */
+export const HOUSE_DECOY_MARGIN = 0.06;
+/** Gap multiplier for the current difficulty. */
+export const gapMul = (world: World) => (world.easy ? EASY_GAP_MUL : 1);
 export const MAINAKA_RISE_S = 1.0;
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -68,9 +76,9 @@ const rakshasa: ObstacleBehaviour = {
 
 /** Boss gate: wider, fixed gap, bigger sway. */
 const lankini: ObstacleBehaviour = {
-  init: (o, _world, vp) => {
+  init: (o, world, vp) => {
     o.w = OB_W * LANKINI_WIDTH_MUL;
-    o.gapH = LANKINI_GAP * vp.h;
+    o.gapH = LANKINI_GAP * vp.h * gapMul(world);
     o.baseGapH = o.gapH;
     // re-centre the gap so the bigger sway stays on screen
     o.baseGapY = (vp.h - vp.seaH - o.gapH) / 2;
@@ -148,12 +156,58 @@ const simhika: ObstacleBehaviour = {
   passBonus: () => SIMHIKA_SHADOW_BONUS,
 };
 
+/**
+ * Vibhishana's street: the open door is the real gap; one or two doorways are
+ * painted on the solid wall as decoys. Only the gap marked with Tulsi and
+ * Ram-naam lets you through. Gently sways like the sentries do.
+ */
+const house: ObstacleBehaviour = {
+  init: (o, world, vp) => {
+    const sea = vp.h - vp.seaH;
+    const m = HOUSE_DECOY_MARGIN * vp.h;
+    const decoys: number[] = [];
+    // above the gap
+    if (o.gapY - m > m + 20) decoys.push((m + world.rng() * (o.gapY - 2 * m - 20)) / vp.h);
+    // below the gap
+    const lo = o.gapY + o.gapH + m;
+    if (sea - m - 20 > lo) decoys.push((lo + world.rng() * (sea - m - 20 - lo)) / vp.h);
+    o.decoys = decoys;
+  },
+  update: (o, world, vp) => sway(o, world, vp, KINDS.house.sway ?? 0),
+};
+
+/** A vriksha: the hero tears it down instead of dying on it. */
+const vriksha: ObstacleBehaviour = {
+  collide: (o, hero) => {
+    if (o.smashed) return "none";
+    if (columnCollide(o, hero) === "hit") {
+      o.smashed = true;
+      return "smash";
+    }
+    return "none";
+  },
+};
+
+/** Meghnad's volley: same column rules, narrower opening. */
+const astra: ObstacleBehaviour = {
+  init: (o) => {
+    const centre = o.gapY + o.gapH / 2;
+    o.gapH *= ASTRA_GAP_MUL;
+    o.baseGapH = o.gapH;
+    o.gapY = centre - o.gapH / 2;
+    o.baseGapY = o.gapY;
+  },
+};
+
 export const BEHAVIOURS: Partial<Record<ObstacleKindId, ObstacleBehaviour>> = {
   rakshasa,
   lankini,
   mainaka,
   surasa,
   simhika,
+  house,
+  vriksha,
+  astra,
 };
 
 export const heroHitbox = (world: World, vp: Viewport): Hitbox => ({

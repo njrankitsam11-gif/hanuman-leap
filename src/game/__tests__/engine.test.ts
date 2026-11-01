@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, chapterAt, targetPasses } from "../chapters";
-import { CANON_LANDSCAPE, CANON_PORTRAIT, FLAP_H, GRAVITY_H, HERO_R, OB_W } from "../constants";
+import { CHAPTERS, chapterAt, ENDLESS_INDEX, targetPasses } from "../chapters";
 import {
+  CANON_LANDSCAPE,
+  CANON_PORTRAIT,
+  EASY_GAP_MUL,
+  EASY_SPEED_MUL,
+  FLAP_H,
+  GRAVITY_H,
+  HERO_R,
+  OB_W,
+} from "../constants";
+import {
+  chapterSpeed,
   CLEAR_BONUS,
   collide,
   createWorld,
@@ -14,6 +24,8 @@ import {
   startChapter,
   step,
 } from "../engine";
+import { ENDLESS_RAMP } from "../mechanics";
+import { mulberry32 } from "../rng";
 import type { GameEvent, World } from "../types";
 import { computeViewport } from "../viewport";
 
@@ -231,9 +243,20 @@ describe("collide", () => {
     w.y = vp.h - vp.seaH - HERO_R - 1;
     w.vy = 500;
     const events = step(w, noFlap, 1 / 60, vp);
-    expect(events.some((e) => e.type === "hit")).toBe(true);
+    expect(events).toContainEqual({ type: "hit", punya: w.punya, by: "wall" });
     expect(w.running).toBe(false);
     expect(w.deaths).toBe(1);
+  });
+
+  it("names the column that killed the hero", () => {
+    const w = runningWorld(5);
+    const o = spawnObstacle(w, vp, chapterAt(5), "tree");
+    o.x = vp.heroX - o.w / 2;
+    o.gapY = o.baseGapY = 0;
+    o.gapH = o.baseGapH = 0; // the whole column is solid
+    w.obstacles.push(o);
+    const events = step(w, noFlap, DT, vp);
+    expect(events.find((e) => e.type === "hit")).toMatchObject({ by: "tree" });
   });
 });
 
@@ -249,5 +272,73 @@ describe("resizeWorld", () => {
     expect(w.y / portrait.h).toBeCloseTo(yFrac, 9);
     expect(o.gapH / portrait.h).toBeCloseTo(gapFrac, 9);
     expect(o.x).toBe(vp.w + 60); // x untouched
+  });
+});
+
+describe("easy (sahaj) mode", () => {
+  it("widens every gap, Lankini's included, and slows the scroll", () => {
+    const normal = runningWorld(4);
+    const easy = runningWorld(4);
+    easy.easy = true;
+    const ch = chapterAt(4);
+    const a = spawnObstacle(normal, vp, ch, "rakshasa");
+    const b = spawnObstacle(easy, vp, ch, "rakshasa");
+    expect(b.gapH).toBeCloseTo(a.gapH * EASY_GAP_MUL, 6);
+    const la = spawnObstacle(normal, vp, ch, "lankini");
+    const lb = spawnObstacle(easy, vp, ch, "lankini");
+    expect(lb.gapH).toBeCloseTo(la.gapH * EASY_GAP_MUL, 6);
+    expect(chapterSpeed(ch, vp, easy)).toBeCloseTo(
+      chapterSpeed(ch, vp, normal) * EASY_SPEED_MUL,
+      6,
+    );
+  });
+});
+
+describe("endless mode", () => {
+  it("never reaches a goal, keeps spawning from the roster, and ramps speed with passes", () => {
+    const w = runningWorld(ENDLESS_INDEX);
+    const ch = chapterAt(ENDLESS_INDEX);
+    expect(ch.id).toBe("endless");
+    expect(targetPasses(ch)).toBe(Infinity);
+    expect(nextSpawnKind(w, ch)).not.toBeNull();
+    const v0 = chapterSpeed(ch, vp, w);
+    w.passes = 30;
+    step(w, noFlap, DT, vp); // mechanic runs inside step
+    w.vy = 0;
+    w.y = vp.h / 2;
+    expect(chapterSpeed(ch, vp, w)).toBeGreaterThan(v0);
+    w.passes = 10_000;
+    step(w, noFlap, DT, vp);
+    expect(w.speedRamp).toBeCloseTo(1 + ENDLESS_RAMP, 6);
+    expect(w.phase).toBe("run");
+    // a long survival never flips into a finale
+    w.y = vp.h / 2;
+    for (let i = 0; i < 600; i++) {
+      step(w, noFlap, DT, vp);
+      w.vy = 0;
+      w.y = vp.h / 2;
+      w.obstacles = []; // keep it alive; we only care about the phase
+    }
+    expect(w.phase).toBe("run");
+    expect(w.running).toBe(true);
+  });
+
+  it("a seeded rng makes the whole run reproducible", () => {
+    const a = createWorld(vp, mulberry32(99));
+    const b = createWorld(vp, mulberry32(99));
+    for (const w of [a, b]) {
+      startChapter(w, ENDLESS_INDEX, vp);
+      w.running = true;
+    }
+    for (let i = 0; i < 1200; i++) {
+      for (const w of [a, b]) {
+        step(w, i % 40 === 0 ? flap : noFlap, DT, vp);
+      }
+    }
+    expect(a.obstacles.map((o) => [o.kind, o.x, o.gapY, o.gapH])).toEqual(
+      b.obstacles.map((o) => [o.kind, o.x, o.gapY, o.gapH]),
+    );
+    expect(a.y).toBe(b.y);
+    expect(a.punya).toBe(b.punya);
   });
 });

@@ -1,16 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, finaleDuration, targetPasses, VERSES, type Chapter } from "../chapters";
+import {
+  CHAPTERS,
+  chapterAt,
+  ENDLESS,
+  ENDLESS_INDEX,
+  finaleDuration,
+  isEndless,
+  targetPasses,
+  VERSES,
+  type Chapter,
+} from "../chapters";
+import { ENDLESS_DAY, endlessSky } from "../render/sky";
 import { KINDS } from "../kinds";
 
 describe("chapter data", () => {
-  it("has eight chapters in Sundarkand order, ending on the return", () => {
+  it("has ten chapters in Sundarkand order, ending on the return", () => {
     expect(CHAPTERS.map((c) => c.id)).toEqual([
       "prelude",
       "mainaka",
       "surasa",
       "simhika",
       "lankini",
+      "vibhishana",
       "vatika",
+      "vidhvans",
       "dahan",
       "return",
     ]);
@@ -32,6 +45,15 @@ describe("chapter data", () => {
     }
   });
 
+  it("every chapter's prose exists in both languages, Hindi in Devanagari", () => {
+    for (const ch of CHAPTERS as readonly Chapter[]) {
+      for (const text of [ch.title, ch.intro, ch.caption]) {
+        expect(text.en, ch.id).not.toBe("");
+        expect(text.hi, ch.id).toMatch(/[ऀ-ॿ]/);
+      }
+    }
+  });
+
   it("only the Lankini chapter is a boss chapter, and its boss kind exists", () => {
     const bosses = CHAPTERS.filter((c) => c.goal.kind === "boss");
     expect(bosses.map((c) => c.id)).toEqual(["lankini"]);
@@ -48,6 +70,7 @@ describe("verses", () => {
       expect(v.devanagari, key).toMatch(/[ऀ-ॿ]/);
       expect(v.transliteration, key).not.toBe("");
       expect(v.meaning, key).not.toBe("");
+      expect(v.meaningHi, key).toMatch(/[ऀ-ॿ]/);
     }
   });
 
@@ -65,5 +88,33 @@ describe("verses", () => {
       expect(ch.verse.verified, ch.id).toBe(true);
       if (ch.introVerse) expect(ch.introVerse.verified, `${ch.id} intro`).toBe(true);
     }
+  });
+});
+
+describe("endless chapter", () => {
+  it("lives outside the arc at ENDLESS_INDEX with every non-boss kind in its roster", () => {
+    expect((CHAPTERS as readonly Chapter[]).some((c) => c.id === "endless")).toBe(false);
+    expect(chapterAt(ENDLESS_INDEX)).toBe(ENDLESS);
+    expect(isEndless(ENDLESS)).toBe(true);
+    expect(CHAPTERS.some(isEndless)).toBe(false);
+    const kinds = ENDLESS.roster.map(([k]) => k);
+    for (const k of Object.keys(KINDS) as (keyof typeof KINDS)[]) {
+      if (KINDS[k].boss) expect(kinds).not.toContain(k);
+      else expect(kinds).toContain(k);
+    }
+    expect(ENDLESS.verse.verified).toBe(true);
+    for (const text of [ENDLESS.title, ENDLESS.intro, ENDLESS.caption]) {
+      expect(text.hi).toMatch(/[ऀ-ॿ]/);
+      expect(text.en).not.toBe("");
+    }
+  });
+
+  it("cycles the sky once per ENDLESS_DAY passes", () => {
+    expect(endlessSky(0)).toBe("morning");
+    expect(endlessSky(ENDLESS_DAY - 1)).toBe("dawn");
+    expect(endlessSky(ENDLESS_DAY)).toBe("morning");
+    const seen = new Set<string>();
+    for (let p = 0; p < ENDLESS_DAY; p++) seen.add(endlessSky(p));
+    expect([...seen]).toEqual(["morning", "day", "dusk", "night", "dawn"]);
   });
 });

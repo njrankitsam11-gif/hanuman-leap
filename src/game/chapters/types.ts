@@ -1,5 +1,16 @@
 export type ObstacleKindId =
-  "cloud" | "wave" | "mainaka" | "surasa" | "simhika" | "rakshasa" | "lankini" | "tree" | "tower";
+  | "cloud"
+  | "wave"
+  | "mainaka"
+  | "surasa"
+  | "simhika"
+  | "rakshasa"
+  | "lankini"
+  | "house"
+  | "tree"
+  | "vriksha"
+  | "astra"
+  | "tower";
 
 export type SkyId = "morning" | "day" | "dusk" | "night" | "fire" | "dawn";
 
@@ -12,6 +23,8 @@ export type Verse = {
   transliteration: string;
   /** Plain English, one to three sentences. */
   meaning: string;
+  /** The same rendering in Hindi (भावार्थ). */
+  meaningHi: string;
   /** Must be true before shipping — a test enforces it. Set only after checking the text against a printed/Gita Press-derived source. */
   verified: boolean;
 };
@@ -21,18 +34,32 @@ export type ChapterGoal =
   /** Spawn `after` sentries from the roster, then one boss; clearing the boss completes the chapter. */
   | { kind: "boss"; after: number }
   /** After `passes`, spawning stops and a scripted scene plays before the chapter clears. */
-  | { kind: "finale"; passes: number; scene: "sita" | "ram" };
+  | { kind: "finale"; passes: number; scene: "sita" | "ram" | "capture" }
+  /** Never clears; the run ends only on a hit. Difficulty ramps with passes. */
+  | { kind: "endless" };
 
 export type ChapterId =
-  "prelude" | "mainaka" | "surasa" | "simhika" | "lankini" | "vatika" | "dahan" | "return";
+  | "prelude"
+  | "mainaka"
+  | "surasa"
+  | "simhika"
+  | "lankini"
+  | "vibhishana"
+  | "vatika"
+  | "vidhvans"
+  | "dahan"
+  | "return"
+  | "endless";
+
+export type Localized = { hi: string; en: string };
 
 export type Chapter = {
   id: ChapterId;
-  title: { hi: string; en: string };
+  title: Localized;
   /** One line of context on the intro card. */
-  intro: string;
+  intro: Localized;
   /** In-game caption. */
-  caption: string;
+  caption: Localized;
   goal: ChapterGoal;
   difficulty: {
     /** Scroll speed, ·H per second. */

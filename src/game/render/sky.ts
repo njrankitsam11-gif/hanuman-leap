@@ -17,3 +17,12 @@ export function drawSky(ctx: CanvasRenderingContext2D, sky: SkyId, vp: Viewport)
   ctx.fillStyle = tint;
   ctx.fillRect(0, 0, vp.w, vp.h);
 }
+
+/** Endless mode: a day passes every ENDLESS_DAY passes — morning → day → dusk → night → dawn. */
+export const ENDLESS_DAY = 40;
+const CYCLE: SkyId[] = ["morning", "day", "dusk", "night", "dawn"];
+
+export function endlessSky(passes: number): SkyId {
+  const phase = Math.floor(((passes % ENDLESS_DAY) / ENDLESS_DAY) * CYCLE.length);
+  return CYCLE[Math.min(CYCLE.length - 1, phase)]!;
+}

@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, chapterAt, targetPasses } from "../chapters";
+import { CHAPTERS, chapterAt, chapterIndex, targetPasses } from "../chapters";
 import { CANON_LANDSCAPE, HERO_R, OB_W } from "../constants";
 import { collide, createWorld, nextSpawnKind, spawnObstacle, startChapter, step } from "../engine";
 import { DAHAN_RAMP } from "../mechanics";
 import {
+  ASTRA_GAP_MUL,
   COLLECT_PUNYA,
   LANKINI_WIDTH_MUL,
+  SMASH_PUNYA,
   SIMHIKA_PULL,
   SURASA_SHRINK,
   SURASA_SWELL,
@@ -178,5 +180,89 @@ describe("Lanka Dahan and the return", () => {
     expect(w.tailFire).toBe(false);
     expect(w.dir).toBe(1);
     expect(w.speedRamp).toBe(1);
+  });
+});
+
+describe("Vibhishana's street", () => {
+  const vp = computeViewport(CANON_LANDSCAPE.w, CANON_LANDSCAPE.h, 1);
+  it("houses carry painted decoy doorways on solid wall, never inside the real gap", () => {
+    const w = createWorld(vp, () => 0.5);
+    startChapter(w, chapterIndex("vibhishana"), vp);
+    const o = spawnObstacle(w, vp, chapterAt(w.chapter), "house");
+    expect(o.decoys?.length).toBeGreaterThan(0);
+    for (const d of o.decoys ?? []) {
+      const y = d * vp.h;
+      expect(y < o.gapY || y > o.gapY + o.gapH).toBe(true);
+      expect(y).toBeGreaterThan(0);
+      expect(y).toBeLessThan(vp.h - vp.seaH);
+    }
+    // still a lethal column through the wall
+    o.x = vp.heroX - o.w / 2;
+    w.obstacles = [o];
+    w.y = o.gapY - HERO_R - 5;
+    expect(collide(w, vp)).toBe(true);
+    w.y = o.gapY + o.gapH / 2;
+    expect(collide(w, vp)).toBe(false);
+  });
+});
+
+describe("Vatika-vidhvans", () => {
+  const vp = computeViewport(CANON_LANDSCAPE.w, CANON_LANDSCAPE.h, 1);
+  const DT = 1 / 120;
+
+  it("a vriksha is torn down instead of killing the hero, once, for punya", () => {
+    const w = createWorld(vp, () => 0.5);
+    startChapter(w, chapterIndex("vidhvans"), vp);
+    w.running = true;
+    const o = spawnObstacle(w, vp, chapterAt(w.chapter), "vriksha");
+    o.x = vp.heroX - o.w / 2;
+    w.y = o.gapY - HERO_R - 5; // in the canopy
+    w.obstacles = [o];
+    const before = w.punya;
+    const events = step(w, { flap: false }, DT, vp);
+    expect(events.find((e) => e.type === "smash")).toMatchObject({ punya: before + SMASH_PUNYA });
+    expect(events.some((e) => e.type === "hit")).toBe(false);
+    expect(o.smashed).toBe(true);
+    expect(w.smashes).toBe(1);
+    expect(w.running).toBe(true);
+    // the stump no longer collides at all
+    w.y = o.gapY - HERO_R - 5;
+    expect(collide(w, vp)).toBe(false);
+    expect(step(w, { flap: false }, DT, vp).some((e) => e.type === "smash")).toBe(false);
+  });
+
+  it("Meghnad's volley leaves a narrower opening and still kills", () => {
+    const w = createWorld(vp, () => 0.5);
+    startChapter(w, chapterIndex("vidhvans"), vp);
+    const ch = chapterAt(w.chapter);
+    const plain = spawnObstacle(w, vp, ch, "vriksha");
+    const volley = spawnObstacle(w, vp, ch, "astra");
+    expect(volley.gapH).toBeCloseTo(plain.gapH * ASTRA_GAP_MUL, 6);
+    volley.x = vp.heroX - volley.w / 2;
+    w.y = volley.gapY - HERO_R - 2;
+    w.obstacles = [volley];
+    expect(collide(w, vp)).toBe(true);
+  });
+
+  it("ends in the capture finale, then clears into Lanka Dahan", () => {
+    const w = createWorld(vp, () => 0.5);
+    const idx = chapterIndex("vidhvans");
+    startChapter(w, idx, vp);
+    w.running = true;
+    const ch = chapterAt(idx);
+    expect(ch.goal).toEqual({ kind: "finale", passes: 8, scene: "capture" });
+    w.passes = targetPasses(ch);
+    w.obstacles = [];
+    const events: string[] = [];
+    for (let i = 0; i < 120 * 4; i++) {
+      for (const e of step(w, { flap: false }, DT, vp)) events.push(e.type);
+      if (w.phase === "run") {
+        w.vy = 0;
+        w.y = vp.h / 2;
+      }
+    }
+    expect(events).toContain("finale");
+    expect(events).toContain("chapterClear");
+    expect(chapterAt(idx + 1).id).toBe("dahan");
   });
 });

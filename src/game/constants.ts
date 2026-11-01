@@ -23,8 +23,8 @@ export const FLAP_H = -0.768;
 /** Hero placement (fraction of W) and hitbox (AABB half-size, absolute). */
 export const HERO_X_FRAC = 0.19;
 export const HERO_R = 28;
-/** Visible character inside hanuman.png (alpha bbox of the 816² frame). */
-export const HERO_SRC = { x: 23, y: 147, w: 761, h: 460 } as const;
+/** Source rect inside hanuman.webp (already cropped to the alpha bbox of the original 816² frame). */
+export const HERO_SRC = { x: 0, y: 0, w: 761, h: 460 } as const;
 /** Sprite draw rect, relative to the hero centre (same aspect as HERO_SRC). */
 export const HERO_DRAW = { w: 96, h: 58, ox: -48, oy: -29 } as const;
 
@@ -53,6 +53,10 @@ export const PORTRAIT_SPEED_MUL = 0.72;
 export const STEP = 1 / 120;
 export const MAX_SUBSTEPS = 8;
 export const MAX_DT = 0.05;
+
+/** "Sahaj" (easy) mode: gaps are wider and columns arrive slower. */
+export const EASY_GAP_MUL = 1.2;
+export const EASY_SPEED_MUL = 0.88;
 
 /** Ignore input for this long after a hit so a panic tap doesn't skip the game-over screen. */
 export const DEATH_COOLDOWN_MS = 600;

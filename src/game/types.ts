@@ -20,6 +20,10 @@ export type Obstacle = {
   targetPeakY?: number;
   /** Simhika: hero is currently inside her shadow band. */
   shadowing?: boolean;
+  /** House: painted-on doorways (·H) that look open but aren't. */
+  decoys?: number[];
+  /** Vriksha: torn down by the hero; no longer collides. */
+  smashed?: boolean;
 };
 
 /**
@@ -60,6 +64,8 @@ export type World = {
   passes: number;
   /** Passes across the whole run. */
   leaps: number;
+  /** Trees torn down in the current chapter (Vatika-vidhvans). */
+  smashes: number;
   punya: number;
   /** Punya to revert to when the chapter is retried. */
   punyaAtChapterStart: number;
@@ -76,6 +82,8 @@ export type World = {
   dir: 1 | -1;
   /** Chapter-driven speed ramp (Dahan accelerates). */
   speedRamp: number;
+  /** Sahaj mode: wider gaps and slower scroll (see EASY_GAP_MUL / EASY_SPEED_MUL). */
+  easy: boolean;
   /** Injectable for deterministic tests; Math.random in production. */
   rng: () => number;
 };
@@ -86,7 +94,9 @@ export type Input = { flap: boolean };
 export type GameEvent =
   | { type: "pass"; passes: number; punya: number; kind: ObstacleKindId }
   | { type: "collect"; punya: number }
-  | { type: "hit"; punya: number }
+  /** A vriksha came down; `x`/`y` are where to burst leaves. */
+  | { type: "smash"; punya: number; x: number; y: number }
+  | { type: "hit"; punya: number; by: ObstacleKindId | "wall" }
   | { type: "finale"; chapter: number }
   | { type: "chapterClear"; chapter: number; punya: number }
   | { type: "won"; punya: number; deaths: number };

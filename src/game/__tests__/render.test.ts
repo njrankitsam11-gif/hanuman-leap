@@ -57,10 +57,12 @@ const viewports = [
 describe("render", () => {
   it("draws every obstacle kind in every chapter without throwing", () => {
     for (const vp of viewports) {
-      for (let i = 0; i < CHAPTERS.length; i++) {
+      for (let i = 0; i <= CHAPTERS.length; i++) {
+        // i === CHAPTERS.length is the endless chapter
         const w = createWorld(vp, () => 0.5);
         startChapter(w, i, vp);
         w.running = true;
+        w.passes = 37; // endless: mid-cycle sky
         for (const kind of Object.keys(KINDS) as ObstacleKindId[]) {
           const o = spawnObstacle(w, vp, chapterAt(i), kind);
           o.x = vp.w * 0.5;

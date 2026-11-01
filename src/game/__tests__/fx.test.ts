@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { chapterIndex } from "../chapters";
 import { CANON_LANDSCAPE } from "../constants";
 import { createWorld, startChapter } from "../engine";
 import { burst, createFx, flapFx, hitFx, MAX_PARTICLES, updateFx, wipeFx } from "../fx";
@@ -58,7 +59,7 @@ describe("fx", () => {
     expect(fx.particles.some((p) => p.kind === "spark")).toBe(true);
     expect(fx.particles.some((p) => p.kind === "flame")).toBe(false);
 
-    const dahan = world(6);
+    const dahan = world(chapterIndex("dahan"));
     expect(dahan.tailFire).toBe(true);
     const fx2 = createFx();
     for (let i = 0; i < 12; i++) {

@@ -37,6 +37,16 @@ export const KINDS: Record<ObstacleKindId, KindDef> = {
     bonus: 100,
     boss: true,
   },
+  house: {
+    name: "House",
+    top: "#b8863a",
+    bottom: "#5e3d14",
+    style: "column",
+    sway: 0.1,
+    bonus: 10,
+  },
   tree: { name: "Ashoka", top: "#4f7d35", bottom: "#22401a", style: "column" },
+  vriksha: { name: "Vriksha", top: "#4f7d35", bottom: "#22401a", style: "column" },
+  astra: { name: "Astra", top: "#d9b25a", bottom: "#6e4a12", style: "column", bonus: 20 },
   tower: { name: "Tower", top: "#d4a54a", bottom: "#7a5518", style: "column", bonus: 15 },
 };

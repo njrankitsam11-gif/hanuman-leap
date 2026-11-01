@@ -1,5 +1,5 @@
-import hanumanSrc from "@/assets/hanuman.png";
-import oceanSrc from "@/assets/ocean-bg.jpg";
+import hanumanSrc from "@/assets/hanuman.webp";
+import oceanSrc from "@/assets/ocean-bg.webp";
 import type { Assets } from "./types";
 
 /** Client-only: constructs `Image`s, so call it from an effect, never at module scope. */
