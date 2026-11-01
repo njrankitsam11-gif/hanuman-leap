@@ -34,7 +34,7 @@ Commit spec updates in the same commit as the feature (or the one right after it
 ```bash
 bun install                      # deps (lockfile: bun.lock)
 bun run dev -- --port 8091       # web app; 8080 is often held by the main checkout
-bun run test                     # vitest: 83 tests, ~0.3 s
+bun run test                     # vitest: 90 tests, ~0.3 s
 bunx tsc --noEmit                # strict typecheck (must stay clean)
 bun run lint                     # eslint; 0 errors expected (react-refresh warnings are fine)
 bun run build                    # TanStack Start + nitro → .output/

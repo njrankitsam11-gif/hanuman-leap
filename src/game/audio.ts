@@ -42,6 +42,12 @@ export function setMuted(m: boolean) {
 
 export const isMuted = () => muted;
 
+/** The running context and master bus, for `music.ts`; null until unlocked or while suspended. */
+export function audioGraph(): { ctx: AudioContext; master: GainNode } | null {
+  if (!ctx || !master || ctx.state !== "running") return null;
+  return { ctx, master };
+}
+
 /** One second of white noise, shared by every noisy sound. */
 function noiseBuffer(ac: AudioContext) {
   if (noise) return noise;

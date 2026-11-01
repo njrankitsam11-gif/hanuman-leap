@@ -33,6 +33,12 @@ describe("migrate", () => {
     expect(s.stats).toEqual(DEFAULT_STATS);
   });
 
+  it("turns music on for saves made before the music setting existed", () => {
+    const { music: _music, ...old } = DEFAULT_SAVE;
+    expect(migrate({ ...old, muted: true }).music).toBe(true);
+    expect(migrate({ ...DEFAULT_SAVE, music: false }).music).toBe(false);
+  });
+
   it("keeps a brand-new v1 player eligible for the hint", () => {
     expect(migrate({ v: 1, best: 0, muted: false, unlockedChapter: 0 }).hinted).toBe(false);
   });

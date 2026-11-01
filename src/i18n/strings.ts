@@ -56,6 +56,7 @@ const en = {
   "select.locked": "(locked)",
 
   "settings.sound": "Sound",
+  "settings.music": "Music",
   "settings.haptics": "Vibration",
   "settings.language": "Language",
   "settings.easy": "Sahaj mode",
@@ -147,6 +148,7 @@ const hi: Record<StringKey, string> = {
   "select.locked": "(बंद)",
 
   "settings.sound": "ध्वनि",
+  "settings.music": "संगीत",
   "settings.haptics": "कंपन",
   "settings.language": "भाषा",
   "settings.easy": "सहज मोड",

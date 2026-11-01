@@ -17,6 +17,7 @@ import { stopPointer } from "./Overlay";
 
 export type Settings = {
   muted: boolean;
+  music: boolean;
   haptics: boolean;
   easy: boolean;
 };
@@ -69,6 +70,15 @@ export function SettingsSheet({
           <label className={row}>
             <span className="text-sm font-medium">{t("settings.sound")}</span>
             <Switch checked={!settings.muted} onCheckedChange={(v) => onChange({ muted: !v })} />
+          </label>
+
+          <label className={row}>
+            <span className="text-sm font-medium">{t("settings.music")}</span>
+            <Switch
+              checked={settings.music}
+              disabled={settings.muted}
+              onCheckedChange={(v) => onChange({ music: v })}
+            />
           </label>
 
           {hapticsAvailable && (

@@ -57,6 +57,8 @@ export type SaveV2 = {
   best: number;
   unlockedChapter: number;
   muted: boolean;
+  /** Background music (tanpura + raga phrase); separate from `muted`, which silences all. */
+  music: boolean;
   haptics: boolean;
   lang: Lang;
   /** "Sahaj" mode: wider gaps, slower scroll. */
@@ -97,6 +99,7 @@ export const DEFAULT_SAVE: SaveV3 = {
   best: 0,
   unlockedChapter: 0,
   muted: false,
+  music: true,
   haptics: true,
   lang: "en",
   easy: false,
@@ -131,7 +134,7 @@ function isV2Shape(x: unknown, v: 2 | 3): boolean {
     isBool(s["hinted"]) &&
     typeof s["stats"] === "object" &&
     s["stats"] !== null
-    // fields added later (endlessBest, daily, achievements) are back-filled by migrate
+    // fields added later (music, endlessBest, daily, achievements) are back-filled by migrate
   );
 }
 const isV2 = (x: unknown): x is SaveV2 => isV2Shape(x, 2);

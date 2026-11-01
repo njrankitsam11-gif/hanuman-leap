@@ -167,7 +167,8 @@ doorways, rakshasa sentries; verses दोहा 5 · चौपाई 6.1 and in
 volleys with a narrower gap, and a `capture` finale where the Brahmastra binds Hanuman before Lanka
 Dahan; verses चौपाई 18.1–18.2 and दोहा 19). All four verses were cross-checked against
 drikpanchang.com and shrirammitramandal.com. Save v3 remaps chapter indices from the 8-chapter arc.
-Remaining here: Madhuvan, Setu-bandh, the Verse Pothi, the art pass, music, kid mode.
+Remaining here: Madhuvan, Setu-bandh, the Verse Pothi, the art pass, kid mode. **Music shipped
+2026-11-01** (`src/game/music.ts`).
 
 New chapters in Tulsidas's order, each needing a verified verse (same cross-check process as
 `verses.ts`, `verified: true` enforced by tests):
@@ -185,7 +186,7 @@ Also:
   transliteration/meaning toggles and share; recitation audio only if the owner supplies recordings.
 - **Art pass** — 3–4 frame flap animation, parallax sea/clouds, per-chapter backgrounds. Needs an
   artist or generated assets; procedural improvements can start without them.
-- **Music** — synthesized tanpura drone + a pentatonic motif per chapter (keeps the zero-asset
+- ✅ **Music** (shipped 2026-11-01) — synthesized tanpura drone + a pentatonic motif per chapter (keeps the zero-asset
   policy), with a separate "music" toggle in settings.
 - **Kid-friendly difficulty** (wider gaps, slower Surasa) as a settings option rather than an
   automatic downgrade.

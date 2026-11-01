@@ -73,7 +73,22 @@ dropped). Particle kinds: `spark` (trail / flap), `sparkle` (collect), `ember` (
   `fire` (unused by the shell today).
 - `setAmbience("fire" | null)`: looped brown-noise fire, only while actually playing Dahan
   (shell effect keyed on `state/paused/chapter`).
-- `setMuted` ramps the master gain; `isMuted`.
+- `setMuted` ramps the master gain; `isMuted`. `audioGraph()` hands `{ctx, master}` to
+  `music.ts` (null until unlocked or while suspended).
+
+## Music (`src/game/music.ts`) — synthesized, zero files
+
+- Pure part (tested): `TUNES: Record<ChapterId, {root, scale, tempo}>` — one pentatonic raga per
+  chapter (Bhupali morning/return, Durga Surasa/Vidhvans, Malkauns Simhika/Lankini/Dahan,
+  Shivranjani Vibhishana/Vatika); `phrase(id)` is a deterministic 32-step melody seeded by
+  `hashSeed("hanuman-leap:music:<id>")`, ending on Sa; `TANPURA` = Pa, Sa', Sa', low Sa.
+- Loop = `LOOP_STEPS` (64): the phrase on a soft vibrato sine ("bansuri"), then 32 steps of
+  drone alone. The tanpura plucks every beat (two detuned saws, closing low-pass).
+- Look-ahead scheduler (`setInterval` 60 ms, 0.25 s ahead) on a per-track bus into the master,
+  so Sound mute silences music; a stale schedule after a suspended tab skips ahead.
+- `setMusic(id | null)` crossfades (1.5 s in, ~1 s out); `setMusicEnabled(on)`. The shell plays
+  the current chapter's track during `intro`, unpaused `playing`, `chapterClear` and `won`; off
+  when paused, fallen, or back at the menus. Fire ambience still layers under it in Dahan.
 
 ## Haptics (`src/game/haptics.ts`)
 
