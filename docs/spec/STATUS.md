@@ -23,7 +23,7 @@ entries go at the bottom of §5._
 | 7         | Capacitor shell: native Vite entry, platform seam, config, `ios/` (SPM) + `android/`, icons/splash. **Not compiled** (no toolchains)                                                       | feature branch |
 | 8         | Seeded PRNG, Endless Flight, Today's Leap (IST), 17 achievements + toasts, share card, per-chapter stats; modes unlock at chapter 4                                                        | feature branch |
 | 10 (part) | Two new chapters — विभीषण मिलन (5) and वाटिका विध्वंस (7): kinds `house/vriksha/astra`, `smash` result, `capture` finale; save v3 remap                                                    | feature branch |
-| Landing   | Full-screen first page (`src/components/Landing.tsx`): painted dawn, Hanuman mid-leap, Lanka skyline, launch verse, Play → game; `?chapter=n` skips it; web only                       | this branch    |
+| Landing   | Full-screen first page (`src/components/Landing.tsx`): painted dawn, Hanuman mid-leap, Lanka skyline, launch verse, Play → game; `?chapter=n` skips it; web + native shell           | this branch    |
 | Specs     | `CLAUDE.md` + `docs/spec/*` (this set)                                                                                                                                                     | this branch    |
 
 ## 3. In flight
@@ -55,3 +55,5 @@ _(nothing)_
   keyframes in `styles.css` (off under reduced motion); `routes/index.tsx` shows it until Play.
   Native shell unchanged. 83 tests. Note: `tsc` flags `__root.tsx` ErrorComponent typing after
   the TanStack 1.168.60 bump (pre-existing, not from this change).
+- **2026-11-01** — Native shell (`src/native/NativeApp.tsx`) now shows the same `Landing` before
+  the game. `build:native` OK; still not compiled on device (no Xcode/Android Studio here).
