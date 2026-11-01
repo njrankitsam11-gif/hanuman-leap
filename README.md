@@ -8,13 +8,14 @@ ten chapters, each closing with a verse from Tulsidas's _Ramcharitmanas_.
 
 ## Play
 
+- The link opens on an illustrated title page — press **Play now** to start.
 - **Tap / click / Space / ↑ / Enter** — rise
 - **P / Esc** — pause · **M** — mute
 - Works in portrait on phones and landscape on desktop; installable as a PWA and
   playable offline after the first visit.
 - **Settings** (gear on the start screen, or from Pause): sound, vibration,
   _Sahaj_ mode (wider gaps, slower sea), Hindi / English UI, journey stats, reset.
-- `?chapter=n` (0–7) opens a chapter directly.
+- `?chapter=n` (0–9) skips the title page and opens a chapter directly.
 
 ## Chapters
 

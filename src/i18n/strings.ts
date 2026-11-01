@@ -12,6 +12,10 @@ const en = {
   "app.footer":
     "Space / tap to rise · P to pause · M to mute · verses from Tulsidas's Ramcharitmanas",
 
+  "landing.play": "Play now",
+  "landing.facts": "10 chapters · one tap · free",
+  "landing.verseLabel": "From the Sundarkand",
+
   "start.blurb":
     "Carry Lord Ram's ring across the sea to Sita Maa, set Lanka ablaze, and bring her crest-jewel home — through ten chapters of the Sundarkand.",
   "start.begin": "Begin the leap",
@@ -98,6 +102,9 @@ const hi: Record<StringKey, string> = {
   "app.eyebrow": "सुंदरकांड",
   "app.title": "हनुमान की लंका-छलाँग",
   "app.tagline": "भारत के तट से लंका तक, सीता माँ के लिए प्रभु राम की मुद्रिका लेकर।",
+  "landing.play": "खेलें",
+  "landing.facts": "10 अध्याय · एक टैप · मुफ़्त",
+  "landing.verseLabel": "सुंदरकांड से",
   "app.footer": "Space या टैप से उड़ान · P विराम · M मौन · चौपाइयाँ तुलसीदास की रामचरितमानस से",
 
   "start.blurb":

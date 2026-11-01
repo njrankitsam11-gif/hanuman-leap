@@ -23,6 +23,7 @@ entries go at the bottom of §5._
 | 7         | Capacitor shell: native Vite entry, platform seam, config, `ios/` (SPM) + `android/`, icons/splash. **Not compiled** (no toolchains)                                                       | feature branch |
 | 8         | Seeded PRNG, Endless Flight, Today's Leap (IST), 17 achievements + toasts, share card, per-chapter stats; modes unlock at chapter 4                                                        | feature branch |
 | 10 (part) | Two new chapters — विभीषण मिलन (5) and वाटिका विध्वंस (7): kinds `house/vriksha/astra`, `smash` result, `capture` finale; save v3 remap                                                    | feature branch |
+| Landing   | Full-screen first page (`src/components/Landing.tsx`): painted dawn, Hanuman mid-leap, Lanka skyline, launch verse, Play → game; `?chapter=n` skips it; web only                       | this branch    |
 | Specs     | `CLAUDE.md` + `docs/spec/*` (this set)                                                                                                                                                     | this branch    |
 
 ## 3. In flight
@@ -49,3 +50,8 @@ _(nothing)_
 - **2026-09-16** — Read the whole codebase; fast-forwarded `claude/codebase-spec-files-c279b8`
   onto the feature branch; wrote `CLAUDE.md` and `docs/spec/{README,00–07,STATUS}.md` as the
   cross-session memory; established the update-after-each-feature rule. Verified baseline above.
+- **2026-11-01** — Landing page: `src/components/Landing.tsx` (CSS/SVG artwork reusing
+  `hanuman.webp` + `ocean-bg.webp`, launch verse from `VERSES`), `landing.*` strings (en/hi),
+  keyframes in `styles.css` (off under reduced motion); `routes/index.tsx` shows it until Play.
+  Native shell unchanged. 83 tests. Note: `tsc` flags `__root.tsx` ErrorComponent typing after
+  the TanStack 1.168.60 bump (pre-existing, not from this change).
