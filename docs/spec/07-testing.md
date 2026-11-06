@@ -2,7 +2,7 @@
 
 ## Baseline
 
-`bun run test` → **13 files, 90 tests**, ~0.3 s, node environment, no DOM. `bunx tsc --noEmit`
+`bun run test` → **16 files, 129 tests**, ~0.3 s, node environment, no DOM. `bunx tsc --noEmit`
 clean. `bun run lint` 0 errors (7 react-refresh warnings from files that export helpers next to
 components — acceptable).
 
@@ -19,6 +19,7 @@ components — acceptable).
 | `storage.test.ts`      | migrate garbage/v1/v2/v3, `music` backfill, fresh factory, chapter remap, backfill, `bumpChapter` purity, native mirror/restore                                                                                                                |
 | `achievements.test.ts` | bilingual/unique ids, first_leap once, kind/chapter rules, win rules, totals and mode milestones                                                                                                                                               |
 | `music.test.ts`        | every chapter + Endless has a tune, five-note scales on Sa, tanpura on Sa/Pa, phrase deterministic, in scale and range, fits the first half-loop, ends on Sa                                                                                   |
+| `playthrough.test.ts`  | a look-ahead bot, tapping at human speed, finishes every chapter in both orientations (seeded)                                                                                                                                                 |
 | `rng.test.ts`          | mulberry32 determinism/range/uniformity, IST day key, seed stability                                                                                                                                                                           |
 | `share.test.ts`        | card draws for every mode × language, text per mode with Indian grouping                                                                                                                                                                       |
 | `i18n.test.ts`         | Hindi covers every key in Devanagari, identical placeholders, `format`                                                                                                                                                                         |

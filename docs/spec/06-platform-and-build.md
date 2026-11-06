@@ -6,7 +6,9 @@
   Vercel domain), manifest + icons links, `QueryClientProvider`, 404 and error components
   (Lovable error reporting). Root effect: `initAnalytics()`, `registerServiceWorker()`, tracks
   `appinstalled`.
-- `src/routes/index.tsx`: the only page; `validateSearch` accepts `?chapter=n` (integer ≥ 0,
+- `src/routes/privacy.tsx`: the privacy page, bilingual (`privacy.*` strings), linked from
+  `AccountPanel` by absolute URL so the native shell can open it too.
+- `src/routes/index.tsx`: the game page; `validateSearch` accepts `?chapter=n` (integer ≥ 0,
   clamped to the arc by the shell). Wraps the game in `LangProvider`.
 - `src/router.tsx` (router + QueryClient), `src/start.ts` (error + CSRF middleware),
   `src/server.ts` (SSR entry wrapper that turns h3-swallowed 500s into the Lovable error page).
@@ -32,7 +34,7 @@ Preview deployments are not trusted, so sign-in fails there. Neon rejects
   production only** as `/sw.js?v=<__BUILD_ID__>` so every deploy is a new worker. Caches
   `shell-<v>` (`/`, manifest, icons) and `assets-<v>` (hashed `/assets/*`). On install it fetches
   `/`, scans the HTML and its CSS for `/assets/...` URLs and precaches them, so one online visit
-  enables offline play. Fetch strategy: navigations network-first with a 4 s timeout → cached shell;
+  enables offline play. Fetch strategy: navigations network-first with a 4 s timeout → cached shell (only `/` refills the shell);
   `/assets/*` cache-first; static/icons stale-while-revalidate; cross-origin and non-GET untouched.
   Activate deletes other versions' caches. Tested in a `vm` sandbox (`src/lib/__tests__/sw.test.ts`)
   because the embedded browser can't install workers.

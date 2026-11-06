@@ -94,7 +94,10 @@ async function handleNavigation(request) {
   const shell = await caches.open(SHELL);
   try {
     const res = await withTimeout(fetch(request), NAV_TIMEOUT_MS);
-    if (res.ok) shell.put("/", res.clone()).catch(() => {});
+    // only the game itself is the offline shell, not /privacy
+    if (res.ok && new URL(request.url).pathname === "/") {
+      shell.put("/", res.clone()).catch(() => {});
+    }
     return res;
   } catch {
     const cached = await shell.match("/");

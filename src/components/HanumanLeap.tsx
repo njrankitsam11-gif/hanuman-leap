@@ -869,6 +869,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
             punya={punya}
             best={mode === "daily" ? daily.best : endlessBest}
             newBest={modeNewBest}
+            canContinue={canContinue}
             onRetry={retry}
             onChapters={toChapters}
             onShare={share}

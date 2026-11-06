@@ -200,6 +200,24 @@ describe("service worker", () => {
     expect((await offline.request("/?chapter=3", "navigate"))?.body).toBe("<html>new</html>");
   });
 
+  it("keeps the game as the offline shell after visiting another page", async () => {
+    await sw.fire("install", new FakeEvent());
+    const online = boot("abc123", {
+      ...baseNetwork,
+      "/privacy": new FakeResponse("<html>privacy</html>"),
+    });
+    online.caches.set("shell-abc123", sw.caches.get("shell-abc123")!);
+    await online.request("/privacy", "navigate");
+    const offline = boot("abc123", {
+      ...baseNetwork,
+      "/": () => {
+        throw new Error("offline");
+      },
+    });
+    offline.caches.set("shell-abc123", sw.caches.get("shell-abc123")!);
+    expect((await offline.request("/", "navigate"))?.body).not.toContain("privacy");
+  });
+
   it("leaves cross-origin and non-GET requests alone", async () => {
     const ev = new FakeEvent({ url: "https://example.com/x.js", method: "GET", mode: "no-cors" });
     await sw.fire("fetch", ev);
