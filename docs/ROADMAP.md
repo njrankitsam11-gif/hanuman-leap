@@ -146,7 +146,9 @@ is the same one Phase 9's leaderboard verification needs, so both land together.
 
 ---
 
-## 4. Phase 9 — Online (optional, needs a backend decision)
+## 4. Phase 9 — Online (optional)
+
+Backend exists since 2026-11-05: Neon Postgres, Managed Auth, `/api/save` (see spec 05).
 
 **Leaderboard with replay verification.** A submitted run is `{seed, vp:{w,h}, flaps: number[] /* step indices */, punya}`.
 A TanStack Start server function re-runs `engine.step` with the same seed, viewport, and inputs and
@@ -199,7 +201,7 @@ Also:
 | --- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | 1   | Store presence        | **Yes — Capacitor (Phase 7), after Phase 6.** Native scaffolding can be prepared without accounts; store submission waits for the owner's Apple/Google developer accounts                | The web/PWA path is the base either way; the app is the main new reach                |
 | 2   | Devices / orientation | **iPhone + iPad, free rotation**                                                                                                                                                         | The game already handles both orientations well; iPad landscape is the desktop layout |
-| 3   | Online leaderboard    | **Local-only for now; Phase 9 is gated on telemetry showing retention**                                                                                                                  | Needs a Neon account and moderation policy; the daily challenge works offline first   |
+| 3   | Online leaderboard    | **Local-only for now; Phase 9 is gated on telemetry showing retention.** Accounts and cloud save were added 2026-11-05 at the owner's request; the leaderboard stays gated                                                                                                                  | Needs a Neon account and moderation policy; the daily challenge works offline first   |
 | 4   | Analytics             | **Provider-agnostic `track()` in `src/lib/analytics.ts`, wired to Vercel Web Analytics** (page views on Hobby; custom events flow once on Pro). Swapping to PostHog is a one-file change | Vercel is already the host; no new account or key                                     |
 | 5   | Art                   | **Procedural-only until an artist is available**; art pass stays in Phase 10                                                                                                             | Don't block shipping on assets                                                        |
 | 6   | New chapters          | **Vibhishana (विभीषण मिलन) and Vatika-vidhvans/Brahmastra first**, Phase 10                                                                                                              | Most story-faithful; the second one also fixes the abrupt jump into Dahan             |
@@ -214,4 +216,4 @@ telemetry dictate.
 
 **Phase 7 is blocked on toolchains** (Xcode, Android Studio) and accounts; **Phase 8 and the two
 Phase 10 chapters are shipped**. Next unblocked work: the Verse Pothi and synthesized music (Phase 10),
-or Phase 9 once a Neon account exists.
+or Phase 9 (the Neon account now exists).

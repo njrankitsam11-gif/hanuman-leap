@@ -29,7 +29,12 @@ entries go at the bottom of §5._
 
 ## 3. In flight
 
-_(nothing)_
+**Sign-in + cloud save** (branch `claude/cloud-save-sign-in`). Built and locally checked; a real
+email-code sign-in has not been completed yet (needs the owner's inbox). Before it goes live:
+
+- Owner completes sign-in, sync and delete-account once. `deleteUser` is unproven on Managed Auth.
+- Custom SMTP for Neon Auth: the shared sender is for development only.
+- A `/privacy` page, since the site now stores email addresses.
 
 ## 4. Next unblocked work (owner-delegated order; see ROADMAP §7)
 
@@ -65,3 +70,13 @@ _(nothing)_
   scheduled while flying, none while paused or with Music off; setting persists. Gotcha: port
   8091 can be held by another checkout's dev server — Vite silently moves to 8092, so check the
   log before testing.
+- **2026-11-05** — Backend and sign-in (web only). Owner chose cloud save over a leaderboard, and
+  email code over Google. Neon (free plan, `sin1`, project connected through the Vercel
+  Marketplace) with Managed Auth. New `src/routes/api/save.ts`, `src/lib/cloud-save-server.ts`
+  (bearer JWT, EdDSA, `game_saves` table, `db/schema.sql` applied by hand), `src/lib/cloud-save.ts`
+  (client sync, 5 s debounce), `AccountPanel.tsx`; `mergeSaves`/`parseSave`/`onSaveWrite`/
+  `replaceSave` in `storage.ts`. 14 files, 102 tests. Verified: API 401s without a valid token;
+  Neon accepted a code request from the panel. Gotchas: Neon rejects `capacitor://localhost` as a
+  trusted domain, so sign-in is switched off in the native shell; `vercel` CLI 59 has no `--yes`
+  on `integration add`; run eslint on `src` (a bare `bun run lint` here walked build output and
+  reported 27k formatting errors). `tsc` `__root.tsx` error is still the pre-existing one.

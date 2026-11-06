@@ -13,6 +13,7 @@ import { CHAPTERS } from "@/game/chapters";
 import type { Lang, Stats } from "@/game/storage";
 import { LANG_NAMES, pick, useLang, useT } from "@/i18n";
 import { cn } from "@/lib/utils";
+import { AccountPanel } from "./AccountPanel";
 import { stopPointer } from "./Overlay";
 
 export type Settings = {
@@ -127,6 +128,8 @@ export function SettingsSheet({
             </div>
           </div>
         </div>
+
+        <AccountPanel />
 
         <section className="rounded-xl border border-border/60 bg-muted/40 px-4 py-3">
           <h3 className="text-[10px] font-semibold uppercase tracking-[0.25em] [&:lang(hi)]:tracking-normal text-muted-foreground">

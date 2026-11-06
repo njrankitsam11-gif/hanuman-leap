@@ -20,6 +20,14 @@ export function setStorageMirror(fn: ((json: string) => void) | null) {
   mirror = fn;
 }
 
+/** Cloud sync's hook: told after every write. Returns an unsubscribe. */
+const writeListeners = new Set<() => void>();
+
+export function onSaveWrite(fn: () => void): () => void {
+  writeListeners.add(fn);
+  return () => writeListeners.delete(fn);
+}
+
 /** Seed localStorage from a backup when it has nothing of its own (native boot). */
 export function restoreSave(json: string | null) {
   if (typeof window === "undefined" || !json) return;
@@ -214,6 +222,7 @@ function write(next: SaveV3) {
     // quota exceeded or storage disabled — the in-memory value still wins this session
   }
   mirror?.(json);
+  writeListeners.forEach((fn) => fn());
 }
 
 /** Shallow-merge a patch into the stored save and return the result. */
@@ -246,6 +255,57 @@ export function resetProgress(): SaveV3 {
   };
   write(next);
   return next;
+}
+
+/** A save arriving from outside (the cloud API): the current shape, or null if it isn't one. */
+export function parseSave(raw: unknown): SaveV3 | null {
+  if (!isV3(raw)) return null;
+  const save = backfill(raw);
+  return Array.isArray(save.stats.chapters) ? save : null;
+}
+
+/**
+ * Combine two devices' progress. Progress only ever grows, so each field keeps the
+ * furthest value and nothing earned on either device is lost. Preferences stay `local`'s:
+ * sound and language belong to the device in hand. Pure; the server runs it too.
+ */
+export function mergeSaves(local: SaveV3, remote: SaveV3): SaveV3 {
+  const a = local.stats;
+  const b = remote.stats;
+  const chapters: Stats["chapters"] = [];
+  for (let i = 0; i < Math.max(a.chapters.length, b.chapters.length); i++) {
+    const x = a.chapters[i] ?? { clears: 0, deaths: 0 };
+    const y = b.chapters[i] ?? { clears: 0, deaths: 0 };
+    chapters.push({ clears: Math.max(x.clears, y.clears), deaths: Math.max(x.deaths, y.deaths) });
+  }
+  const daily =
+    local.daily.date === remote.daily.date
+      ? { date: local.daily.date, best: Math.max(local.daily.best, remote.daily.best) }
+      : local.daily.date > remote.daily.date
+        ? local.daily
+        : remote.daily;
+  return {
+    ...local,
+    best: Math.max(local.best, remote.best),
+    unlockedChapter: Math.max(local.unlockedChapter, remote.unlockedChapter),
+    hinted: local.hinted || remote.hinted,
+    endlessBest: Math.max(local.endlessBest, remote.endlessBest),
+    daily,
+    achievements: [...new Set([...local.achievements, ...remote.achievements])],
+    stats: {
+      runs: Math.max(a.runs, b.runs),
+      leaps: Math.max(a.leaps, b.leaps),
+      deaths: Math.max(a.deaths, b.deaths),
+      wins: Math.max(a.wins, b.wins),
+      flawless: Math.max(a.flawless, b.flawless),
+      chapters,
+    },
+  };
+}
+
+/** Overwrite the stored save with a merged one from the cloud. */
+export function replaceSave(next: SaveV3) {
+  write(next);
 }
 
 /** Stats helpers, pure so they're testable and reusable by the native build. */

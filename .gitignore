@@ -37,3 +37,4 @@ dist-native
 
 # Vercel
 .vercel
+.env*
