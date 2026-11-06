@@ -53,11 +53,13 @@ const apiUrl = () => `${platform().isNative ? SITE_URL : ""}/api/save`;
 
 async function api(method: "PUT" | "DELETE", body?: unknown): Promise<Response> {
   const auth = await authClient();
-  const { data } = await auth.token();
-  if (!data?.token) throw new Error("no session");
+  // Not `auth.token()`: the SDK answers "/token" from its session cache, with no top-level token.
+  const { data } = await auth.getSession();
+  const token = data?.session?.token;
+  if (!token) throw new Error("no session");
   const res = await fetch(apiUrl(), {
     method,
-    headers: { authorization: `Bearer ${data.token}`, "content-type": "application/json" },
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
   if (!res.ok) throw new Error(`save API ${res.status}`);

@@ -55,6 +55,8 @@ Invariant: sign-in must never lock players out. In the native shell, with no
 
 - **Sign-in**: emailed code through Neon Managed Auth (`@neondatabase/auth`), loaded on demand.
   UI is `AccountPanel` in the settings sheet. Local progress stays on sign-out.
+- **Token**: read the JWT from `getSession()`'s `session.token`. `auth.token()` looks right but the
+  SDK serves "/token" from its session cache, so it returns no token and every save silently fails.
 - **API**: `/api/save` GET/PUT/DELETE, `Authorization: Bearer <Neon JWT>`. A plain route rather
   than a server function so the native shell can call it cross-origin later. Every query uses
   the verified token's `sub`. Body cap 64 KB; `parseSave` rejects anything but a current save.
