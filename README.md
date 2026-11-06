@@ -55,6 +55,13 @@ Both unlock once Lankini's gate (chapter 5) is reachable. Seventeen achievements
 clears/falls table. Results can be shared as an image card (Web Share API), or as
 text and a link where images aren't supported.
 
+## Account
+
+On the website, players sign in with an emailed code before playing. Progress then
+follows them across devices, and their email is kept with their save. The sign-in
+screen and the [privacy page](https://hanuman-leap.vercel.app/privacy) explain how
+it is used. Settings has Delete account.
+
 ## Verses
 
 Verse text is from the Sundarkand of Tulsidas's _Ramcharitmanas_ (Gita Press

@@ -11,7 +11,8 @@
 - `src/routes/index.tsx`: the game page; `validateSearch` accepts `?chapter=n` (integer ≥ 0,
   clamped to the arc by the shell). Wraps the game in `LangProvider`.
 - `src/router.tsx` (router + QueryClient), `src/start.ts` (error + CSRF middleware),
-  `src/server.ts` (SSR entry wrapper that turns h3-swallowed 500s into the Lovable error page).
+  `src/server.ts` (SSR entry wrapper that turns h3-swallowed 500s into the Lovable error page and,
+  in production, adds `src/lib/security-headers.ts`; static assets don't pass through it).
 - `routeTree.gen.ts` is generated — don't edit. Don't add `src/pages/` or Next-style layouts
   (`src/routes/README.md`).
 - Hosting: Vercel (`.vercel` ignored). Nitro preset defaults to cloudflare in the Lovable config;
@@ -84,10 +85,8 @@ happens to work on the vitest files, but `bun run test` is canonical.
 
 - Remote `origin` → GitHub `njrankitsam11-gif/hanuman-leap`, default branch `main`, Lovable-connected:
   **no history rewriting** on pushed commits (`AGENTS.md`).
-- Work branches: `claude/<topic>-<hash>` in `.claude/worktrees/`. As of 2026-09-16 the feature
-  branch `claude/next-phase-mobile-planning-178c16` (Phases 6–8, 10) is 17 commits ahead of `main`
-  and unmerged/unpushed; `claude/codebase-spec-files-c279b8` was fast-forwarded onto it and adds
-  these specs.
+- Work branches: `claude/<topic>-<hash>` in `.claude/worktrees/`, merged to `main` by PR. Vercel
+  deploys `main`.
 - Commit messages: imperative summary, optional body; end with the Co-Authored-By line the
   session provides.
 
