@@ -19,6 +19,8 @@ export type SaveStore = {
   read: (userId: string) => Promise<SaveV3 | null>;
   write: (player: Player, save: SaveV3) => Promise<void>;
   remove: (userId: string) => Promise<void>;
+  /** Someone leaving asked to hear about future projects: keeps only their email. */
+  subscribe: (email: string) => Promise<void>;
 };
 
 export type SaveDeps = {
@@ -44,6 +46,16 @@ const json = (request: Request, status: number, body: unknown) =>
     headers: { ...cors(request), "cache-control": "no-store" },
   });
 
+/** Only an explicit `true` counts: this is the player's consent. */
+async function wantsToStayInTouch(request: Request) {
+  try {
+    const body = JSON.parse(await request.text()) as { keepEmail?: unknown } | null;
+    return body?.keepEmail === true;
+  } catch {
+    return false; // no body: a plain reset or a deletion with the box unticked
+  }
+}
+
 export async function handleSaveRequest(request: Request, deps: SaveDeps): Promise<Response> {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: cors(request) });
@@ -59,6 +71,14 @@ export async function handleSaveRequest(request: Request, deps: SaveDeps): Promi
   }
 
   if (request.method === "DELETE") {
+    if (await wantsToStayInTouch(request)) {
+      // Their deletion matters more than the list: a failure here must not block it.
+      if (player.email) {
+        await deps.store
+          .subscribe(player.email)
+          .catch((error: unknown) => console.error("mailing list signup failed", error));
+      }
+    }
     await deps.store.remove(userId);
     return json(request, 200, { ok: true });
   }
@@ -150,6 +170,14 @@ function neonStore(): SaveStore {
     },
     remove: async (userId) => {
       await sql`DELETE FROM game_saves WHERE user_id = ${userId}`;
+    },
+    subscribe: async (email) => {
+      await sql`
+        CREATE TABLE IF NOT EXISTS mailing_list (
+          email text PRIMARY KEY,
+          consented_at timestamptz NOT NULL DEFAULT now()
+        )`;
+      await sql`INSERT INTO mailing_list (email) VALUES (${email}) ON CONFLICT DO NOTHING`;
     },
   };
 }

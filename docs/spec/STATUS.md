@@ -8,7 +8,7 @@ entries go at the bottom of §5._
 | Check               | Result                                                           |
 | ------------------- | ---------------------------------------------------------------- |
 | `main`              | Everything below is merged and live (through PR 8)               |
-| `bun run test`      | 17 files, **132 tests** green                                    |
+| `bun run test`      | 17 files, **138 tests** green                                    |
 | `bunx tsc --noEmit` | clean                                                            |
 | `bunx eslint src`   | 0 errors, 7 react-refresh warnings                               |
 | Live site           | https://hanuman-leap.vercel.app (deployed from `main` by Vercel) |
@@ -110,3 +110,8 @@ Still open:
 - **2026-11-06** — Final audit, then `src/lib/security-headers.ts`: `src/server.ts` adds frame,
   sniffing, referrer and permissions headers to server responses in production only (the Lovable
   editor frames dev). No script CSP on purpose. Brought this file, README and spec 06 up to date.
+- **2026-11-06** — Owner confirmed the Data API is off and iPhone sign-in survives a refresh. Owner
+  wanted emails kept after Delete account; silently keeping them would contradict the confirm box
+  and `/privacy`, so Delete account gained an unticked "keep my email" box. Ticked, `DELETE /api/save`
+  gets `{keepEmail: true}` and stores the token's email in `mailing_list` (self-creating, email and
+  consent time only). The saved row is always removed.

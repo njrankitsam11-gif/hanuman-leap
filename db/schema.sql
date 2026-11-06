@@ -5,3 +5,9 @@ CREATE TABLE IF NOT EXISTS game_saves (
   save jsonb NOT NULL,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Emails of people who ticked "keep my email" while deleting their account. Created on first use.
+CREATE TABLE IF NOT EXISTS mailing_list (
+  email text PRIMARY KEY,
+  consented_at timestamptz NOT NULL DEFAULT now()
+);

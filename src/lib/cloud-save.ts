@@ -209,10 +209,10 @@ export async function eraseCloudSave() {
   await push();
 }
 
-export async function deleteAccount() {
+export async function deleteAccount(keepEmail: boolean) {
   if (timer) clearTimeout(timer);
   timer = null;
-  await api("DELETE");
+  await api("DELETE", keepEmail ? { keepEmail: true } : undefined);
   const auth = await authClient();
   const { error } = await auth.deleteUser();
   if (error) throw new Error(error.message);
