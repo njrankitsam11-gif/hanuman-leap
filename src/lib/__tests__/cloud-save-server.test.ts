@@ -5,18 +5,22 @@ import { handleSaveRequest, type SaveStore } from "../cloud-save-server";
 function memoryStore(): SaveStore & {
   rows: Map<string, Save>;
   emails: Map<string, string | null>;
+  list: string[];
 } {
   const rows = new Map<string, Save>();
   const emails = new Map<string, string | null>();
+  const list: string[] = [];
   return {
     rows,
     emails,
+    list,
     read: async (id) => rows.get(id) ?? null,
     write: async ({ id, email }, save) => {
       rows.set(id, save);
       emails.set(id, email);
     },
     remove: async (id) => void rows.delete(id),
+    subscribe: async (email) => void list.push(email),
   };
 }
 
@@ -50,6 +54,50 @@ describe("/api/save", () => {
     const store = memoryStore();
     await handleSaveRequest(req("PUT", "user-a", { save: DEFAULT_SAVE }), deps(store));
     expect(store.emails.get("user-a")).toBe("user-a@example.com");
+  });
+
+  describe("deleting with the keep-my-email box", () => {
+    const stored = async () => {
+      const store = memoryStore();
+      await handleSaveRequest(req("PUT", "user-a", { save: DEFAULT_SAVE }), deps(store));
+      return store;
+    };
+
+    it("keeps nothing unless the box was ticked", async () => {
+      const store = await stored();
+      const res = await handleSaveRequest(req("DELETE", "user-a"), deps(store));
+      expect(res.status).toBe(200);
+      expect(store.rows.size).toBe(0);
+      expect(store.list).toEqual([]);
+    });
+
+    it("keeps only the token's email when it was", async () => {
+      const store = await stored();
+      const body = { keepEmail: true, email: "someone-else@example.com" };
+      await handleSaveRequest(req("DELETE", "user-a", body), deps(store));
+      expect(store.rows.size).toBe(0);
+      expect(store.list).toEqual(["user-a@example.com"]);
+    });
+
+    it("treats anything but true as no", async () => {
+      const store = await stored();
+      await handleSaveRequest(req("DELETE", "user-a", { keepEmail: "yes" }), deps(store));
+      await handleSaveRequest(req("DELETE", "user-a", "not json"), deps(store));
+      expect(store.list).toEqual([]);
+    });
+
+    it("still deletes when the list is unavailable", async () => {
+      const store = await stored();
+      store.subscribe = async () => {
+        throw new Error("database down");
+      };
+      const res = await handleSaveRequest(
+        req("DELETE", "user-a", { keepEmail: true }),
+        deps(store),
+      );
+      expect(res.status).toBe(200);
+      expect(store.rows.size).toBe(0);
+    });
   });
 
   it("stores a first save and returns null before that", async () => {

@@ -15,6 +15,7 @@ export function AccountPanel() {
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [keepEmail, setKeepEmail] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<StringKey | null>(null);
 
@@ -61,15 +62,33 @@ export function AccountPanel() {
           {confirming ? (
             <>
               <p>{t("account.deleteConfirm")}</p>
+              <label className="flex items-start gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 size-4 shrink-0 accent-primary"
+                  checked={keepEmail}
+                  onChange={(e) => setKeepEmail(e.target.checked)}
+                />
+                <span>{t("account.keepEmail")}</span>
+              </label>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm" onClick={() => setConfirming(false)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setConfirming(false);
+                    setKeepEmail(false);
+                  }}
+                >
                   {t("settings.cancel")}
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
                   disabled={busy}
-                  onClick={() => void run(deleteAccount).then(() => setConfirming(false))}
+                  onClick={() =>
+                    void run(() => deleteAccount(keepEmail)).then(() => setConfirming(false))
+                  }
                 >
                   {t("account.delete")}
                 </Button>

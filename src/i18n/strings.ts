@@ -90,6 +90,7 @@ const en = {
   "account.delete": "Delete account",
   "account.deleteConfirm":
     "Delete your account and its saved progress? Progress on this device stays.",
+  "account.keepEmail": "Keep my email so you can tell me about future projects",
   "account.error": "That didn't work. Check your connection and try again.",
   "privacy.title": "Privacy",
   "privacy.intro":
@@ -105,7 +106,7 @@ const en = {
     "Neon stores your account and progress. Vercel hosts the game and counts page visits and anonymous game events, such as which chapter was reached. These never include your email. Turning on Do Not Track in your browser stops them.",
   "privacy.deleteTitle": "Deleting your data",
   "privacy.delete":
-    "Open Settings in the game and choose Delete account. This removes your account and saved progress from our servers. Progress in your browser stays until you clear it or use Reset progress.",
+    "Open Settings in the game and choose Delete account. This removes your account and saved progress from our servers. Progress in your browser stays until you clear it or use Reset progress. If you tick the box to keep your email, we keep only your email, to tell you about future projects, until you ask us to stop.",
   "privacy.back": "Back to the game",
   "mode.endless": "Endless Flight",
   "mode.daily": "Today's Leap",
@@ -217,6 +218,7 @@ const hi: Record<StringKey, string> = {
   "account.signOut": "साइन आउट",
   "account.delete": "खाता हटाएँ",
   "account.deleteConfirm": "खाता और उसमें सुरक्षित प्रगति हटा दें? इस डिवाइस की प्रगति बनी रहेगी।",
+  "account.keepEmail": "मेरा ईमेल रखें ताकि आप मुझे आगे की परियोजनाओं के बारे में बता सकें",
   "account.error": "यह नहीं हो पाया। अपना कनेक्शन जाँचें और फिर कोशिश करें।",
   "privacy.title": "निजता",
   "privacy.intro":
@@ -231,7 +233,7 @@ const hi: Record<StringKey, string> = {
     "Neon आपका खाता और प्रगति रखता है। Vercel खेल चलाता है और पेज विज़िट तथा गुमनाम खेल घटनाएँ गिनता है, जैसे कौन-सा अध्याय पहुँचा गया। इनमें आपका ईमेल कभी नहीं होता। ब्राउज़र में Do Not Track चालू करने से ये बंद हो जाती हैं।",
   "privacy.deleteTitle": "अपना डेटा हटाना",
   "privacy.delete":
-    "खेल में सेटिंग खोलें और खाता हटाएँ चुनें। इससे आपका खाता और सुरक्षित प्रगति हमारे सर्वर से हट जाती है। ब्राउज़र की प्रगति तब तक रहती है जब तक आप उसे साफ़ न करें या प्रगति न मिटाएँ।",
+    "खेल में सेटिंग खोलें और खाता हटाएँ चुनें। इससे आपका खाता और सुरक्षित प्रगति हमारे सर्वर से हट जाती है। ब्राउज़र की प्रगति तब तक रहती है जब तक आप उसे साफ़ न करें या प्रगति न मिटाएँ। यदि आप ईमेल रखने का बॉक्स चुनते हैं, तो हम केवल आपका ईमेल रखते हैं, ताकि आपको आगे की परियोजनाओं के बारे में बता सकें, जब तक आप मना न करें।",
   "privacy.back": "खेल पर लौटें",
   "mode.endless": "अखंड उड़ान",
   "mode.daily": "आज की उड़ान",

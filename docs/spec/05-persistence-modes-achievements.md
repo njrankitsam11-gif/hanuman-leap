@@ -55,6 +55,9 @@ Invariant: sign-in must never lock players out (a right code with no readable se
 that takes over 8 s to answer, means `off`). In the native shell, with no
 `VITE_NEON_AUTH_URL`, or when Neon Auth can't be reached, the account is `off` and the game plays.
 
+- **Mailing list**: Delete account has an unticked "keep my email" box. Only an explicit
+  `keepEmail: true` adds the verified token's email to `mailing_list`; everything else is removed.
+  A failed signup is logged and never blocks the deletion.
 - **Sign-in**: emailed code through Neon Managed Auth (`@neondatabase/auth`), loaded on demand.
   UI is `AccountPanel` in the settings sheet. Local progress stays on sign-out.
 - **Token**: read the JWT from `getSession()`'s `session.token`. `auth.token()` looks right but the

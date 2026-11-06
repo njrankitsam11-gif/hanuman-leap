@@ -112,4 +112,27 @@ describe("cloud sync through the real auth SDK", () => {
 
     expect(loadSave()).toMatchObject({ unlockedChapter: 2, best: 90 });
   });
+
+  it.each([
+    [true, JSON.stringify({ keepEmail: true })],
+    [false, undefined],
+  ])("sends the box's state when deleting (ticked: %s)", async (keepEmail, expected) => {
+    const bodies: unknown[] = [];
+    const jwt = validJwt();
+    vi.stubEnv("VITE_NEON_AUTH_URL", "https://auth.example/neondb/auth");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = urlOf(input);
+        if (url.includes("/get-session")) return session(jwt);
+        if (url.endsWith("/api/save")) bodies.push(init?.body);
+        return Response.json({});
+      }),
+    );
+    const { deleteAccount } = await freshClient();
+
+    await deleteAccount(keepEmail);
+
+    expect(bodies).toEqual([expected]);
+  });
 });
