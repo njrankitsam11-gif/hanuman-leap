@@ -71,6 +71,9 @@ sign-in has not been completed yet (needs the owner's inbox). Before compulsory 
   scheduled while flying, none while paused or with Music off; setting persists. Gotcha: port
   8091 can be held by another checkout's dev server — Vite silently moves to 8092, so check the
   log before testing.
+- **2026-11-06** — Fixed cloud save never sending: `auth.token()` returned no token because the
+  SDK answers "/token" from its session cache. `api()` now uses `getSession()`'s JWT; found from
+  the owner's real sign-in, which left a user row but no save. New end-to-end client test.
 - **2026-11-06** — Compulsory sign-in on the web: `checkAccount` + `canPlay` in
   `src/lib/cloud-save.ts`, sign-in screen in `src/routes/index.tsx`, new
   `src/lib/__tests__/cloud-save.test.ts`. Unreachable auth now means `off`, not `out`, so an
