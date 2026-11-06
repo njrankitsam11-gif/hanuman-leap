@@ -2,7 +2,7 @@
  * The /api/save backend. Plain bearer-token HTTP rather than a server function because the
  * Capacitor app calls it cross-origin. Every query is scoped to the verified token's user.
  */
-import { neon } from "@neondatabase/serverless";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { mergeSaves, parseSave, type SaveV3 } from "@/game/storage";
 
@@ -12,15 +12,18 @@ const MAX_BODY_BYTES = 64 * 1024;
 /** The native shells' WebView origins (iOS, Android). The web app is same-origin. */
 const NATIVE_ORIGINS = ["capacitor://localhost", "https://localhost"];
 
+/** Who a verified token belongs to. */
+export type Player = { id: string; email: string | null };
+
 export type SaveStore = {
   read: (userId: string) => Promise<SaveV3 | null>;
-  write: (userId: string, save: SaveV3) => Promise<void>;
+  write: (player: Player, save: SaveV3) => Promise<void>;
   remove: (userId: string) => Promise<void>;
 };
 
 export type SaveDeps = {
-  /** The user id in a valid token, or null. */
-  verify: (token: string) => Promise<string | null>;
+  /** The player in a valid token, or null. */
+  verify: (token: string) => Promise<Player | null>;
   store: SaveStore;
 };
 
@@ -47,8 +50,9 @@ export async function handleSaveRequest(request: Request, deps: SaveDeps): Promi
   }
 
   const token = request.headers.get("authorization")?.match(/^Bearer (.+)$/)?.[1];
-  const userId = token ? await deps.verify(token) : null;
-  if (!userId) return json(request, 401, { error: "unauthorized" });
+  const player = token ? await deps.verify(token) : null;
+  if (!player) return json(request, 401, { error: "unauthorized" });
+  const userId = player.id;
 
   if (request.method === "GET") {
     return json(request, 200, { save: await deps.store.read(userId) });
@@ -75,7 +79,7 @@ export async function handleSaveRequest(request: Request, deps: SaveDeps): Promi
 
     const stored = await deps.store.read(userId);
     const merged = stored ? mergeSaves(incoming, stored) : incoming;
-    await deps.store.write(userId, merged);
+    await deps.store.write(player, merged);
     return json(request, 200, { save: merged });
   }
 
@@ -90,7 +94,7 @@ function env(name: string): string {
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
 
-async function verifyNeonToken(token: string): Promise<string | null> {
+async function verifyNeonToken(token: string): Promise<Player | null> {
   const base = env("NEON_AUTH_BASE_URL");
   jwks ??= createRemoteJWKSet(new URL(`${base}/.well-known/jwks.json`));
   try {
@@ -98,10 +102,33 @@ async function verifyNeonToken(token: string): Promise<string | null> {
       issuer: new URL(base).origin,
       algorithms: ["EdDSA"],
     });
-    return payload.sub ?? null;
+    if (!payload.sub) return null;
+    return {
+      id: payload.sub,
+      email: typeof payload["email"] === "string" ? payload["email"] : null,
+    };
   } catch {
     return null;
   }
+}
+
+let emailColumn: Promise<void> | null = null;
+
+/** Older databases have no email column; add it once and fill in players who already saved. */
+function ensureEmailColumn(sql: NeonQueryFunction<false, false>) {
+  emailColumn ??= (async () => {
+    await sql`ALTER TABLE game_saves ADD COLUMN IF NOT EXISTS email text`;
+    await sql`
+      UPDATE game_saves g SET email = u.email
+      FROM neon_auth."user" u
+      WHERE g.email IS NULL AND u.id::text = g.user_id`.catch((error: unknown) =>
+      console.error("email backfill failed", error),
+    );
+  })().catch((error: unknown) => {
+    emailColumn = null;
+    throw error;
+  });
+  return emailColumn;
 }
 
 function neonStore(): SaveStore {
@@ -111,11 +138,15 @@ function neonStore(): SaveStore {
       const rows = await sql`SELECT save FROM game_saves WHERE user_id = ${userId}`;
       return parseSave(rows[0]?.["save"]);
     },
-    write: async (userId, save) => {
+    write: async ({ id, email }, save) => {
       await sql`
         INSERT INTO game_saves (user_id, save, updated_at)
-        VALUES (${userId}, ${JSON.stringify(save)}::jsonb, now())
+        VALUES (${id}, ${JSON.stringify(save)}::jsonb, now())
         ON CONFLICT (user_id) DO UPDATE SET save = EXCLUDED.save, updated_at = now()`;
+      // Progress is already safe: a problem with the email must never fail the save.
+      await ensureEmailColumn(sql)
+        .then(() => sql`UPDATE game_saves SET email = ${email} WHERE user_id = ${id}`)
+        .catch((error: unknown) => console.error("saving player email failed", error));
     },
     remove: async (userId) => {
       await sql`DELETE FROM game_saves WHERE user_id = ${userId}`;

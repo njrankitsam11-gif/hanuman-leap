@@ -2,7 +2,7 @@
 
 ## Baseline
 
-`bun run test` → **16 files, 129 tests**, ~0.3 s, node environment, no DOM. `bunx tsc --noEmit`
+`bun run test` → **16 files, 130 tests**, ~0.3 s, node environment, no DOM. `bunx tsc --noEmit`
 clean. `bun run lint` 0 errors (7 react-refresh warnings from files that export helpers next to
 components — acceptable).
 
