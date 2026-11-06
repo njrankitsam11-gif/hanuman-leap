@@ -78,7 +78,9 @@ const en = {
   "account.email": "Email address",
   "account.send": "Email me a code",
   "account.code": "6-digit code",
-  "account.codeSent": "We sent a code to {email}.",
+  "account.codeSent":
+    "We sent a code to {email}. It can take a minute; check your spam folder too.",
+  "account.codeError": "That code didn't work. Check it, or go back and ask for a new one.",
   "account.verify": "Sign in",
   "account.back": "Use a different email",
   "account.signedIn": "Signed in as {email}",
@@ -88,6 +90,22 @@ const en = {
   "account.deleteConfirm":
     "Delete your account and its saved progress? Progress on this device stays.",
   "account.error": "That didn't work. Check your connection and try again.",
+  "privacy.title": "Privacy",
+  "privacy.intro":
+    "Hanuman's Leap is a free game. It has no ads and sells nothing, including your data.",
+  "privacy.collectTitle": "What we keep",
+  "privacy.collect":
+    "Your email address, so you can sign in, and your game progress: scores, unlocked chapters, achievements and journey stats.",
+  "privacy.deviceTitle": "On your device",
+  "privacy.device":
+    "Your progress and settings are also kept in your browser, so the game works offline.",
+  "privacy.servicesTitle": "Who handles it",
+  "privacy.services":
+    "Neon stores your account and progress. Vercel hosts the game and counts page visits and anonymous game events, such as which chapter was reached. These never include your email. Turning on Do Not Track in your browser stops them.",
+  "privacy.deleteTitle": "Deleting your data",
+  "privacy.delete":
+    "Open Settings in the game and choose Delete account. This removes your account and saved progress from our servers. Progress in your browser stays until you clear it or use Reset progress.",
+  "privacy.back": "Back to the game",
   "mode.endless": "Endless Flight",
   "mode.daily": "Today's Leap",
   "mode.dailyHint": "The same sea for everyone today · {date}",
@@ -187,7 +205,9 @@ const hi: Record<StringKey, string> = {
   "account.email": "ईमेल पता",
   "account.send": "मुझे कोड भेजें",
   "account.code": "6 अंकों का कोड",
-  "account.codeSent": "हमने {email} पर कोड भेजा है।",
+  "account.codeSent":
+    "हमने {email} पर कोड भेजा है। इसमें एक मिनट लग सकता है; स्पैम फ़ोल्डर भी देखें।",
+  "account.codeError": "यह कोड काम नहीं किया। इसे जाँचें, या वापस जाकर नया कोड मँगाएँ।",
   "account.verify": "साइन इन करें",
   "account.back": "दूसरा ईमेल चुनें",
   "account.signedIn": "{email} से साइन इन है",
@@ -196,6 +216,21 @@ const hi: Record<StringKey, string> = {
   "account.delete": "खाता हटाएँ",
   "account.deleteConfirm": "खाता और उसमें सुरक्षित प्रगति हटा दें? इस डिवाइस की प्रगति बनी रहेगी।",
   "account.error": "यह नहीं हो पाया। अपना कनेक्शन जाँचें और फिर कोशिश करें।",
+  "privacy.title": "निजता",
+  "privacy.intro":
+    "हनुमान की लंका-छलाँग एक मुफ़्त खेल है। इसमें न विज्ञापन हैं, न कुछ बेचा जाता है, आपका डेटा भी नहीं।",
+  "privacy.collectTitle": "हम क्या रखते हैं",
+  "privacy.collect":
+    "आपका ईमेल पता, ताकि आप साइन इन कर सकें, और खेल की प्रगति: स्कोर, खुले अध्याय, उपलब्धियाँ और यात्रा के आँकड़े।",
+  "privacy.deviceTitle": "आपके डिवाइस पर",
+  "privacy.device": "आपकी प्रगति और सेटिंग आपके ब्राउज़र में भी रहती हैं, ताकि खेल ऑफ़लाइन चले।",
+  "privacy.servicesTitle": "इसे कौन सँभालता है",
+  "privacy.services":
+    "Neon आपका खाता और प्रगति रखता है। Vercel खेल चलाता है और पेज विज़िट तथा गुमनाम खेल घटनाएँ गिनता है, जैसे कौन-सा अध्याय पहुँचा गया। इनमें आपका ईमेल कभी नहीं होता। ब्राउज़र में Do Not Track चालू करने से ये बंद हो जाती हैं।",
+  "privacy.deleteTitle": "अपना डेटा हटाना",
+  "privacy.delete":
+    "खेल में सेटिंग खोलें और खाता हटाएँ चुनें। इससे आपका खाता और सुरक्षित प्रगति हमारे सर्वर से हट जाती है। ब्राउज़र की प्रगति तब तक रहती है जब तक आप उसे साफ़ न करें या प्रगति न मिटाएँ।",
+  "privacy.back": "खेल पर लौटें",
   "mode.endless": "अखंड उड़ान",
   "mode.daily": "आज की उड़ान",
   "mode.dailyHint": "आज सबके लिए एक जैसा समुद्र · {date}",

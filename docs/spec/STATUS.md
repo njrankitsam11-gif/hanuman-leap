@@ -29,13 +29,15 @@ entries go at the bottom of §5._
 
 ## 3. In flight
 
-**Compulsory sign-in** (branch `claude/compulsory-sign-in`). Sign-in + cloud save is live as
-optional since 2026-11-06 (PR 4); this branch makes it compulsory on the web. A real email-code
-sign-in has not been completed yet (needs the owner's inbox). Before compulsory goes live:
+**Compulsory sign-in** is live on the web (PRs 4 to 6). The `/privacy` page shipped 2026-11-06.
+Still open:
 
-- Owner completes sign-in, sync and delete-account once. `deleteUser` is unproven on Managed Auth.
+- Owner completes sign-in, refresh, sync and delete-account once on a real iPhone. Sessions rely on
+  a cookie from Neon's domain, which Safari may block; `verifyCode` now lets the player in without
+  cloud save if so, but they would be asked to sign in on every visit. `deleteUser` is unproven on
+  Managed Auth.
 - Custom SMTP for Neon Auth: the shared sender is for development only.
-- A `/privacy` page, since the site now stores email addresses.
+- A contact line on `/privacy`: left out until the owner chooses a public address.
 
 ## 4. Next unblocked work (owner-delegated order; see ROADMAP §7)
 
@@ -88,3 +90,17 @@ sign-in has not been completed yet (needs the owner's inbox). Before compulsory 
   trusted domain, so sign-in is switched off in the native shell; `vercel` CLI 59 has no `--yes`
   on `integration add`; run eslint on `src` (a bare `bun run lint` here walked build output and
   reported 27k formatting errors). `tsc` `__root.tsx` error is still the pre-existing one.
+- **2026-11-06** — Pre-share refinement. Fixed: the invisible game-over buttons took panic taps, and
+  Endless/Daily had no cooldown (`canContinue`); tall overlays clipped their top (`justify-center-safe`);
+  landing clipped Play on sideways phones; root `ErrorComponent` typing (`tsc` clean again).
+  Cloud save: a push response no longer overwrites progress written while it was in flight, such a
+  write now queues another push, auth calls time out after 8 s, a wrong code gets its own message,
+  and a right code with no readable session opens the game. New `/privacy` page (linked from
+  `AccountPanel`, public, bilingual); `sw.js` caches only `/` as the shell. Surasa's narrowest mouth
+  0.55 → 0.7: a look-ahead bot showed chapter 3 harder than Dahan. New `playthrough.test.ts` proves
+  every chapter finishable in both orientations. `bun audit fix` applied; `better-auth` stays flagged
+  because `@neondatabase/auth` pins it, and the flagged OAuth and magic-link paths are not used here.
+  16 files, 129 tests. Not observed live: the game-over cooldown (pane throttles rAF). The owner's Neon
+  console shows five rows in `game_saves`, so saves are reaching production. `game_saves` holds only
+  the user id: emails live in Neon's `neon_auth.user` table. `player_profiles`, also in the console,
+  is not used by this repo.

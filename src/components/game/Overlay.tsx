@@ -18,7 +18,7 @@ export function Overlay({
   return (
     <div
       className={cn(
-        "absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-y-auto bg-background/75 px-5 py-6 text-center backdrop-blur-sm",
+        "absolute inset-0 flex flex-col items-center justify-center-safe gap-3 overflow-y-auto bg-background/75 px-5 py-6 text-center backdrop-blur-sm",
         className,
       )}
       onPointerDown={interactive ? stop : undefined}

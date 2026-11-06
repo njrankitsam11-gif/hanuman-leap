@@ -188,7 +188,10 @@ export function GameOver({
         {t("over.body", { punya, n: index + 1, title: chapter.title.hi })}
       </p>
       <div
-        className={cn("flex gap-2 transition-opacity duration-300", !canContinue && "opacity-0")}
+        className={cn(
+          "flex flex-wrap items-start justify-center gap-2 transition-opacity duration-300",
+          !canContinue && "pointer-events-none opacity-0",
+        )}
       >
         <Button
           size="lg"
@@ -229,6 +232,7 @@ export function EndlessOver({
   punya,
   best,
   newBest,
+  canContinue,
   onRetry,
   onChapters,
   onShare,
@@ -239,6 +243,7 @@ export function EndlessOver({
   punya: number;
   best: number;
   newBest: boolean;
+  canContinue: boolean;
   onRetry: () => void;
   onChapters: () => void;
   onShare: () => Promise<ShareOutcome>;
@@ -266,8 +271,18 @@ export function EndlessOver({
       <div className="max-w-md rounded-xl border border-border/60 bg-background/60 px-4 py-3">
         <VerseBlock verse={chapter.verse} compact />
       </div>
-      <div className="mt-1 flex flex-wrap items-start justify-center gap-2">
-        <Button size="lg" autoFocus className="rounded-full px-7 shadow-lg" onClick={onRetry}>
+      <div
+        className={cn(
+          "mt-1 flex flex-wrap items-start justify-center gap-2 transition-opacity duration-300",
+          !canContinue && "pointer-events-none opacity-0",
+        )}
+      >
+        <Button
+          size="lg"
+          disabled={!canContinue}
+          className="rounded-full px-7 shadow-lg"
+          onClick={onRetry}
+        >
           {t("over.retry")}
         </Button>
         <Button size="lg" variant="outline" className="rounded-full px-6" onClick={onChapters}>

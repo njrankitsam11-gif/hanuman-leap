@@ -6,7 +6,14 @@
  */
 import { useSyncExternalStore } from "react";
 import { SITE_URL } from "@/game/share";
-import { loadSave, onSaveWrite, parseSave, replaceSave, type Save } from "@/game/storage";
+import {
+  loadSave,
+  mergeSaves,
+  onSaveWrite,
+  parseSave,
+  replaceSave,
+  type Save,
+} from "@/game/storage";
 import { platform } from "@/platform";
 
 export type Account =
@@ -14,6 +21,24 @@ export type Account =
   { status: "off" } | { status: "loading" } | { status: "out" } | { status: "in"; email: string };
 
 const PUSH_DELAY_MS = 5000;
+/** A blocked or hanging auth service must not leave players staring at "One moment…". */
+const AUTH_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(work: PromiseLike<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error("auth timed out")), AUTH_TIMEOUT_MS);
+    work.then(
+      (value) => {
+        clearTimeout(id);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(id);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      },
+    );
+  });
+}
 
 let account: Account = { status: "loading" };
 const listeners = new Set<() => void>();
@@ -32,6 +57,8 @@ const LOADING: Account = { status: "loading" };
 
 /** Everyone plays once signed in; "off" must stay playable or an outage would lock players out. */
 export const canPlay = (a: Account) => a.status === "in" || a.status === "off";
+
+export const currentAccount = () => account;
 
 export const useAccount = () =>
   useSyncExternalStore(
@@ -69,36 +96,52 @@ async function api(method: "PUT" | "DELETE", body?: unknown): Promise<Response> 
 let onMerged: ((save: Save) => void) | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let pushing = false;
+/** Progress was written while a push was out, so another one must follow it. */
+let pushAgain = false;
 
 /** Send local progress up; the server merges and returns the combined save. */
 async function push() {
   if (timer) clearTimeout(timer);
   timer = null;
-  if (account.status !== "in" || pushing) return;
+  if (account.status !== "in") return;
+  if (pushing) {
+    pushAgain = true;
+    return;
+  }
   pushing = true;
+  pushAgain = false;
   try {
     const res = await api("PUT", { save: loadSave() });
-    const merged = parseSave(((await res.json()) as { save?: unknown }).save);
-    if (merged && JSON.stringify(merged) !== JSON.stringify(loadSave())) {
-      // `pushing` is still set, so this write doesn't queue another push
+    const remote = parseSave(((await res.json()) as { save?: unknown }).save);
+    // Merge into what's stored now, not what was sent: a chapter cleared meanwhile must survive.
+    const local = loadSave();
+    const merged = remote && mergeSaves(local, remote);
+    if (merged && JSON.stringify(merged) !== JSON.stringify(local)) {
+      const again = pushAgain;
       replaceSave(merged);
+      pushAgain = again; // our own write isn't new progress
       onMerged?.(merged);
     }
   } catch {
     // offline or a server hiccup: localStorage still has it; the next write or `online` retries
   } finally {
     pushing = false;
+    if (pushAgain) schedulePush();
   }
 }
 
 function schedulePush() {
-  if (account.status !== "in" || pushing || timer) return;
+  if (account.status !== "in" || timer) return;
+  if (pushing) {
+    pushAgain = true;
+    return;
+  }
   timer = setTimeout(() => void push(), PUSH_DELAY_MS);
 }
 
 async function adoptSession() {
-  const auth = await authClient();
-  const { data, error } = await auth.getSession();
+  const auth = await withTimeout(authClient());
+  const { data, error } = await withTimeout(auth.getSession());
   if (error) throw new Error(error.message);
   const email = data?.user?.email;
   setAccount(email ? { status: "in", email } : { status: "out" });
@@ -132,16 +175,21 @@ export function startCloudSync(merged: (save: Save) => void): () => void {
 }
 
 export async function sendCode(email: string) {
-  const auth = await authClient();
-  const { error } = await auth.emailOtp.sendVerificationOtp({ email, type: "sign-in" });
+  const auth = await withTimeout(authClient());
+  const { error } = await withTimeout(
+    auth.emailOtp.sendVerificationOtp({ email, type: "sign-in" }),
+  );
   if (error) throw new Error(error.message);
 }
 
 export async function verifyCode(email: string, otp: string) {
-  const auth = await authClient();
-  const { error } = await auth.signIn.emailOtp({ email, otp });
+  const auth = await withTimeout(authClient());
+  const { error } = await withTimeout(auth.signIn.emailOtp({ email, otp }));
   if (error) throw new Error(error.message);
   await adoptSession();
+  // The code was right, but a browser that blocks Neon's cross-site cookie shows no session.
+  // Never hold someone at the gate for that: they play on this device without cloud save.
+  if (account.status === "out") setAccount({ status: "off" });
 }
 
 /** Progress stays on this device, and in the account for next time. */

@@ -29,7 +29,7 @@ export const SURASA_SHRINK_BONUS = 10;
 export const SIMHIKA_SHADOW_BONUS = 15;
 
 /** Surasa: her mouth closes to this fraction of its opening size as the hero arrives. */
-export const SURASA_MOUTH_MIN = 0.55;
+export const SURASA_MOUTH_MIN = 0.7;
 export const SURASA_MOUTH_MAX = 1.5;
 /** Fraction of W over which the mouth closes. */
 export const SURASA_APPROACH = 0.45;

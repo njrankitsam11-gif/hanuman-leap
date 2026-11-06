@@ -26,7 +26,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Hanuman's Leap to Lanka" },
       {
         property: "og:description",
-        content: "A one-tap flying game retelling Hanuman's ocean crossing from the Sundara Kanda.",
+        content:
+          "A one-tap flying game through ten chapters of the Sundarkand, with Tulsidas's verses.",
       },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://hanuman-leap.vercel.app/og.jpg" },

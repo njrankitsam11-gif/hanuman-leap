@@ -73,11 +73,11 @@ export default function Landing({ onPlay }: { onPlay: () => void }) {
       >
         {lang === "en" ? "हिन्दी" : "English"}
       </button>
-      <div className="relative z-10 mt-[max(3.5rem,env(safe-area-inset-top))] px-4">
+      <div className="relative z-10 mt-[max(3.5rem,env(safe-area-inset-top))] px-4 [@media(max-height:480px)]:mt-4">
         <p className="text-xs font-semibold uppercase tracking-[0.4em] text-amber-200 [&:lang(hi)]:tracking-normal">
           {t("app.eyebrow")}
         </p>
-        <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_3px_12px_rgba(60,10,30,0.6)] sm:text-6xl">
+        <h1 className="mt-2 text-4xl font-extrabold tracking-tight text-white drop-shadow-[0_3px_12px_rgba(60,10,30,0.6)] sm:text-6xl [@media(max-height:480px)]:text-3xl">
           {t("app.title")}
         </h1>
         <p className="mx-auto mt-3 max-w-md text-base text-amber-50/90 sm:text-lg">
@@ -85,8 +85,8 @@ export default function Landing({ onPlay }: { onPlay: () => void }) {
         </p>
       </div>
 
-      <div className="relative z-10 mt-auto mb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col items-center gap-3 px-4">
-        <figure className="max-w-md rounded-2xl bg-black/25 px-5 py-3 text-amber-50 backdrop-blur-sm">
+      <div className="relative z-10 mt-auto mb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col items-center gap-3 px-4 [@media(max-height:480px)]:mb-3">
+        <figure className="max-w-md rounded-2xl [@media(max-height:480px)]:hidden bg-black/25 px-5 py-3 text-amber-50 backdrop-blur-sm">
           <figcaption className="text-[10px] uppercase tracking-[0.3em] text-amber-200/80">
             {t("landing.verseLabel")} · {verse.ref}
           </figcaption>

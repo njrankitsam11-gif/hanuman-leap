@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { useT } from "@/i18n";
+import { SITE_URL } from "@/game/share";
+import { useT, type StringKey } from "@/i18n";
 import { deleteAccount, sendCode, signOut, useAccount, verifyCode } from "@/lib/cloud-save";
 
 const input =
@@ -15,17 +16,17 @@ export function AccountPanel() {
   const [codeSent, setCodeSent] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<StringKey | null>(null);
 
   if (account.status === "off" || account.status === "loading") return null;
 
-  const run = async (action: () => Promise<void>) => {
+  const run = async (action: () => Promise<void>, error: StringKey = "account.error") => {
     setBusy(true);
-    setFailed(false);
+    setFailed(null);
     try {
       await action();
     } catch {
-      setFailed(true);
+      setFailed(error);
     } finally {
       setBusy(false);
     }
@@ -33,16 +34,18 @@ export function AccountPanel() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    void run(async () => {
-      if (codeSent) {
-        await verifyCode(email.trim(), code.trim());
+    if (codeSent) {
+      void run(async () => {
+        await verifyCode(email.trim(), code.replace(/\s/g, ""));
         setCode("");
         setCodeSent(false);
-      } else {
+      }, "account.codeError");
+    } else {
+      void run(async () => {
         await sendCode(email.trim());
         setCodeSent(true);
-      }
-    });
+      });
+    }
   };
 
   return (
@@ -122,7 +125,7 @@ export function AccountPanel() {
               onClick={() => {
                 setCodeSent(false);
                 setCode("");
-                setFailed(false);
+                setFailed(null);
               }}
             >
               {t("account.back")}
@@ -133,9 +136,18 @@ export function AccountPanel() {
 
       {failed && (
         <p role="alert" className="mt-2 text-xs text-destructive">
-          {t("account.error")}
+          {t(failed)}
         </p>
       )}
+
+      <a
+        href={`${SITE_URL}/privacy`}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 block text-xs text-muted-foreground underline underline-offset-2"
+      >
+        {t("privacy.title")}
+      </a>
     </section>
   );
 }
