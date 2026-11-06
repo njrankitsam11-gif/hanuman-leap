@@ -101,6 +101,10 @@ Still open:
   every chapter finishable in both orientations. `bun audit fix` applied; `better-auth` stays flagged
   because `@neondatabase/auth` pins it, and the flagged OAuth and magic-link paths are not used here.
   16 files, 129 tests. Not observed live: the game-over cooldown (pane throttles rAF). The owner's Neon
-  console shows five rows in `game_saves`, so saves are reaching production. `game_saves` holds only
-  the user id: emails live in Neon's `neon_auth.user` table. `player_profiles`, also in the console,
+  console shows five rows in `game_saves`, so saves are reaching production. Emails also live in Neon's
+  `neon_auth.user` table. `player_profiles`, also in the console,
   is not used by this repo.
+- **2026-11-06** — `game_saves.email`: the owner wants emails beside saves in the Neon console. The
+  save API stores the verified token's `email` claim. `ensureEmailColumn` adds the column and
+  backfills from `neon_auth."user"` on the first write per server instance; email trouble is logged
+  and never fails a save. `player_profiles` (`user_id`, `instagram`, empty) is still used by no code.

@@ -49,7 +49,8 @@ empty localStorage at boot (Capacitor Preferences, see 06).
 
 Web-only for now, and compulsory there: after the landing page's Play button, `checkAccount`
 decides between the game and a sign-in screen (`canPlay`). The owner chose this on 2026-11-06 to
-collect player emails. localStorage stays the source the game reads; the cloud is a copy.
+collect player emails, which `game_saves.email` holds beside each save (filled from the verified
+token; the column adds itself and backfills on the first save after deploy). localStorage stays the source the game reads; the cloud is a copy.
 Invariant: sign-in must never lock players out (a right code with no readable session, or auth
 that takes over 8 s to answer, means `off`). In the native shell, with no
 `VITE_NEON_AUTH_URL`, or when Neon Auth can't be reached, the account is `off` and the game plays.

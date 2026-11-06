@@ -74,7 +74,8 @@ const en = {
   "account.title": "Your account",
   "account.gate": "Sign in to play",
   "account.loading": "One moment…",
-  "account.pitch": "Sign in with your email. Your progress stays safe on every device.",
+  "account.pitch":
+    "Sign in with your email. Your progress stays safe on every device, and we may email you about our future projects.",
   "account.email": "Email address",
   "account.send": "Email me a code",
   "account.code": "6-digit code",
@@ -95,7 +96,7 @@ const en = {
     "Hanuman's Leap is a free game. It has no ads and sells nothing, including your data.",
   "privacy.collectTitle": "What we keep",
   "privacy.collect":
-    "Your email address, so you can sign in, and your game progress: scores, unlocked chapters, achievements and journey stats.",
+    "Your email address and your game progress: scores, unlocked chapters, achievements and journey stats. We use your email to sign you in, and we may also email you about our future projects. Reply to any of those emails to stop them.",
   "privacy.deviceTitle": "On your device",
   "privacy.device":
     "Your progress and settings are also kept in your browser, so the game works offline.",
@@ -201,7 +202,8 @@ const hi: Record<StringKey, string> = {
   "account.title": "आपका खाता",
   "account.gate": "खेलने के लिए साइन इन करें",
   "account.loading": "एक क्षण…",
-  "account.pitch": "अपने ईमेल से साइन इन करें। आपकी प्रगति हर डिवाइस पर सुरक्षित रहेगी।",
+  "account.pitch":
+    "अपने ईमेल से साइन इन करें। आपकी प्रगति हर डिवाइस पर सुरक्षित रहेगी, और हम आपको अपनी आगे की परियोजनाओं के बारे में ईमेल कर सकते हैं।",
   "account.email": "ईमेल पता",
   "account.send": "मुझे कोड भेजें",
   "account.code": "6 अंकों का कोड",
@@ -221,7 +223,7 @@ const hi: Record<StringKey, string> = {
     "हनुमान की लंका-छलाँग एक मुफ़्त खेल है। इसमें न विज्ञापन हैं, न कुछ बेचा जाता है, आपका डेटा भी नहीं।",
   "privacy.collectTitle": "हम क्या रखते हैं",
   "privacy.collect":
-    "आपका ईमेल पता, ताकि आप साइन इन कर सकें, और खेल की प्रगति: स्कोर, खुले अध्याय, उपलब्धियाँ और यात्रा के आँकड़े।",
+    "आपका ईमेल पता और खेल की प्रगति: स्कोर, खुले अध्याय, उपलब्धियाँ और यात्रा के आँकड़े। ईमेल से हम आपको साइन इन कराते हैं, और आपको अपनी आगे की परियोजनाओं के बारे में भी ईमेल कर सकते हैं। उन्हें बंद कराने के लिए किसी भी ईमेल का उत्तर दें।",
   "privacy.deviceTitle": "आपके डिवाइस पर",
   "privacy.device": "आपकी प्रगति और सेटिंग आपके ब्राउज़र में भी रहती हैं, ताकि खेल ऑफ़लाइन चले।",
   "privacy.servicesTitle": "इसे कौन सँभालता है",

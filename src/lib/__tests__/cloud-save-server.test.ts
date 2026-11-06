@@ -2,19 +2,28 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_SAVE, type Save } from "@/game/storage";
 import { handleSaveRequest, type SaveStore } from "../cloud-save-server";
 
-function memoryStore(): SaveStore & { rows: Map<string, Save> } {
+function memoryStore(): SaveStore & {
+  rows: Map<string, Save>;
+  emails: Map<string, string | null>;
+} {
   const rows = new Map<string, Save>();
+  const emails = new Map<string, string | null>();
   return {
     rows,
+    emails,
     read: async (id) => rows.get(id) ?? null,
-    write: async (id, save) => void rows.set(id, save),
+    write: async ({ id, email }, save) => {
+      rows.set(id, save);
+      emails.set(id, email);
+    },
     remove: async (id) => void rows.delete(id),
   };
 }
 
 const deps = (store: SaveStore) => ({
   store,
-  verify: async (token: string) => (token.startsWith("user-") ? token : null),
+  verify: async (token: string) =>
+    token.startsWith("user-") ? { id: token, email: `${token}@example.com` } : null,
 });
 
 const req = (method: string, token?: string, body?: unknown, origin?: string) =>
@@ -35,6 +44,12 @@ describe("/api/save", () => {
     expect(
       (await handleSaveRequest(req("PUT", "forged", { save: DEFAULT_SAVE }), deps(store))).status,
     ).toBe(401);
+  });
+
+  it("stores the verified player's email with their save", async () => {
+    const store = memoryStore();
+    await handleSaveRequest(req("PUT", "user-a", { save: DEFAULT_SAVE }), deps(store));
+    expect(store.emails.get("user-a")).toBe("user-a@example.com");
   });
 
   it("stores a first save and returns null before that", async () => {
