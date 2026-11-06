@@ -47,8 +47,11 @@ empty localStorage at boot (Capacitor Preferences, see 06).
 
 ## Accounts and cloud save (`src/lib/cloud-save.ts`, `src/lib/cloud-save-server.ts`)
 
-Optional and web-only for now. localStorage stays the source the game reads; the cloud is a
-copy. Signed out, offline, or with no `VITE_NEON_AUTH_URL`, nothing changes for the player.
+Web-only for now, and compulsory there: after the landing page's Play button, `checkAccount`
+decides between the game and a sign-in screen (`canPlay`). The owner chose this on 2026-11-06 to
+collect player emails. localStorage stays the source the game reads; the cloud is a copy.
+Invariant: sign-in must never lock players out. In the native shell, with no
+`VITE_NEON_AUTH_URL`, or when Neon Auth can't be reached, the account is `off` and the game plays.
 
 - **Sign-in**: emailed code through Neon Managed Auth (`@neondatabase/auth`), loaded on demand.
   UI is `AccountPanel` in the settings sheet. Local progress stays on sign-out.

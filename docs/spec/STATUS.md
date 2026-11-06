@@ -29,8 +29,9 @@ entries go at the bottom of §5._
 
 ## 3. In flight
 
-**Sign-in + cloud save** (branch `claude/cloud-save-sign-in`). Built and locally checked; a real
-email-code sign-in has not been completed yet (needs the owner's inbox). Before it goes live:
+**Compulsory sign-in** (branch `claude/compulsory-sign-in`). Sign-in + cloud save is live as
+optional since 2026-11-06 (PR 4); this branch makes it compulsory on the web. A real email-code
+sign-in has not been completed yet (needs the owner's inbox). Before compulsory goes live:
 
 - Owner completes sign-in, sync and delete-account once. `deleteUser` is unproven on Managed Auth.
 - Custom SMTP for Neon Auth: the shared sender is for development only.
@@ -70,6 +71,10 @@ email-code sign-in has not been completed yet (needs the owner's inbox). Before 
   scheduled while flying, none while paused or with Music off; setting persists. Gotcha: port
   8091 can be held by another checkout's dev server — Vite silently moves to 8092, so check the
   log before testing.
+- **2026-11-06** — Compulsory sign-in on the web: `checkAccount` + `canPlay` in
+  `src/lib/cloud-save.ts`, sign-in screen in `src/routes/index.tsx`, new
+  `src/lib/__tests__/cloud-save.test.ts`. Unreachable auth now means `off`, not `out`, so an
+  outage or offline player can still play. Native stays exempt.
 - **2026-11-05** — Backend and sign-in (web only). Owner chose cloud save over a leaderboard, and
   email code over Google. Neon (free plan, `sin1`, project connected through the Vercel
   Marketplace) with Managed Auth. New `src/routes/api/save.ts`, `src/lib/cloud-save-server.ts`
