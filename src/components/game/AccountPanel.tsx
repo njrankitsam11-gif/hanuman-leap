@@ -6,7 +6,7 @@ import { deleteAccount, sendCode, signOut, useAccount, verifyCode } from "@/lib/
 const input =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-/** Sign-in by emailed code, inside the settings sheet. */
+/** Sign-in by emailed code: the screen before the game, and the account box in settings. */
 export function AccountPanel() {
   const t = useT();
   const account = useAccount();

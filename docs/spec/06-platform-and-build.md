@@ -22,7 +22,7 @@ Resource `hanuman-leap-db`, free plan, Singapore. Env vars are managed by the in
 `vercel env pull .env.local` (git-ignored). Trusted sign-in domains (`neon neon-auth domain`):
 `https://hanuman-leap.vercel.app`, `https://localhost`; localhost ports are allowed by default.
 Preview deployments are not trusted, so sign-in fails there. Neon rejects
-`capacitor://localhost`, so `startCloudSync` reports `off` in the native shell.
+`capacitor://localhost`, so `checkAccount` reports `off` in the native shell.
 
 ## PWA / offline
 

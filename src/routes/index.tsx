@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AccountPanel } from "@/components/game/AccountPanel";
 import HanumanLeap from "@/components/HanumanLeap";
 import Landing from "@/components/Landing";
 import { LangProvider, useLang, useT } from "@/i18n";
+import { canPlay, checkAccount, useAccount } from "@/lib/cloud-save";
 
 /** `?chapter=n` jumps straight to a chapter's intro — handy for testing later chapters. */
 function validateSearch(search: Record<string, unknown>): { chapter?: number } {
@@ -53,7 +55,26 @@ function Page() {
   const t = useT();
   // The landing page greets every visit; `?chapter=n` skips it for testing.
   const [playing, setPlaying] = useState(chapter !== undefined);
+  const account = useAccount();
+  useEffect(() => {
+    if (playing) void checkAccount();
+  }, [playing]);
   if (!playing) return <Landing onPlay={() => setPlaying(true)} />;
+  if (!canPlay(account)) {
+    return (
+      <main
+        lang={lang}
+        className="flex h-dvh flex-col items-center justify-center gap-4 bg-background p-4"
+      >
+        <div className="flex w-full max-w-sm flex-col gap-4">
+          <h1 className="text-center text-2xl font-semibold">
+            {account.status === "loading" ? t("account.loading") : t("account.gate")}
+          </h1>
+          <AccountPanel />
+        </div>
+      </main>
+    );
+  }
   return (
     <main
       lang={lang}

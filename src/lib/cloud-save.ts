@@ -1,7 +1,8 @@
 /**
- * Sign-in and cloud save. Entirely optional: signed out, offline, or with no auth URL
- * configured, the game behaves exactly as it does from localStorage alone. The auth SDK is
- * loaded on demand so it stays out of the game's first download.
+ * Sign-in and cloud save. Players must sign in before playing on the web, but only when sign-in
+ * can actually work: in the native shell, with no auth URL configured, or when the auth service
+ * can't be reached, the game plays from localStorage alone. The auth SDK is loaded on demand so
+ * it stays out of the game's first download.
  */
 import { useSyncExternalStore } from "react";
 import { SITE_URL } from "@/game/share";
@@ -9,7 +10,7 @@ import { loadSave, onSaveWrite, parseSave, replaceSave, type Save } from "@/game
 import { platform } from "@/platform";
 
 export type Account =
-  /** Sign-in isn't configured in this build; hide the panel. */
+  /** Sign-in isn't available right now (see `checkAccount`); hide the panel and let them play. */
   { status: "off" } | { status: "loading" } | { status: "out" } | { status: "in"; email: string };
 
 const PUSH_DELAY_MS = 5000;
@@ -28,6 +29,9 @@ const subscribe = (fn: () => void) => {
 };
 
 const LOADING: Account = { status: "loading" };
+
+/** Everyone plays once signed in; "off" must stay playable or an outage would lock players out. */
+export const canPlay = (a: Account) => a.status === "in" || a.status === "off";
 
 export const useAccount = () =>
   useSyncExternalStore(
@@ -92,21 +96,27 @@ function schedulePush() {
 
 async function adoptSession() {
   const auth = await authClient();
-  const { data } = await auth.getSession();
+  const { data, error } = await auth.getSession();
+  if (error) throw new Error(error.message);
   const email = data?.user?.email;
   setAccount(email ? { status: "in", email } : { status: "out" });
   if (email) await push();
 }
 
-/** Called once by the game shell. `merged` applies progress that arrived from another device. */
-export function startCloudSync(merged: (save: Save) => void): () => void {
-  onMerged = merged;
+/** Called before the game opens, to decide whether it needs the sign-in screen. */
+export async function checkAccount() {
   // Neon can't trust the iOS shell's capacitor:// origin yet, so sign-in is web-only for now.
   if (!import.meta.env.VITE_NEON_AUTH_URL || platform().isNative) {
     setAccount({ status: "off" });
-    return () => {};
+    return;
   }
-  adoptSession().catch(() => setAccount({ status: "out" }));
+  await adoptSession().catch(() => setAccount({ status: "off" }));
+}
+
+/** Called once by the game shell. `merged` applies progress that arrived from another device. */
+export function startCloudSync(merged: (save: Save) => void): () => void {
+  onMerged = merged;
+  void push();
   const stopWrites = onSaveWrite(schedulePush);
   const online = () => void push();
   window.addEventListener("online", online);
