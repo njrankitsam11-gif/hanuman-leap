@@ -16,6 +16,14 @@
   Vercel builds work via the platform. Local prod check:
   `NITRO_PRESET=node-server bun run build && PORT=8092 node .output/server/index.mjs`.
 
+## Backend (Neon through the Vercel Marketplace)
+
+Resource `hanuman-leap-db`, free plan, Singapore. Env vars are managed by the integration:
+`vercel env pull .env.local` (git-ignored). Trusted sign-in domains (`neon neon-auth domain`):
+`https://hanuman-leap.vercel.app`, `https://localhost`; localhost ports are allowed by default.
+Preview deployments are not trusted, so sign-in fails there. Neon rejects
+`capacitor://localhost`, so `startCloudSync` reports `off` in the native shell.
+
 ## PWA / offline
 
 - `public/manifest.webmanifest`: standalone, `orientation: any`, theme `#e07c28`, bg `#0d4a57`,

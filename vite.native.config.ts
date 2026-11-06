@@ -7,6 +7,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   root: "native",
+  envDir: "..",
   base: "./",
   publicDir: false,
   plugins: [react(), tailwindcss()],

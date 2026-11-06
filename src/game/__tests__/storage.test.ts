@@ -4,10 +4,13 @@ import {
   DEFAULT_SAVE,
   DEFAULT_STATS,
   loadSave,
+  mergeSaves,
   migrate,
+  parseSave,
   restoreSave,
   saveGame,
   setStorageMirror,
+  type Save,
   type SaveV1,
 } from "../storage";
 
@@ -130,5 +133,63 @@ describe("native storage mirror", () => {
     store.clear();
     restoreSave(JSON.stringify({ ...DEFAULT_SAVE, best: 99 }));
     expect(loadSave().best).toBe(99);
+  });
+});
+
+describe("mergeSaves", () => {
+  const progress = (patch: Partial<Save>): Save => ({ ...DEFAULT_SAVE, ...patch });
+
+  it("keeps the furthest progress from each device", () => {
+    const merged = mergeSaves(
+      progress({ best: 90, unlockedChapter: 2, achievements: ["first_leap"], hinted: true }),
+      progress({ best: 40, unlockedChapter: 6, achievements: ["first_leap", "chudamani"] }),
+    );
+    expect(merged.best).toBe(90);
+    expect(merged.unlockedChapter).toBe(6);
+    expect(merged.achievements).toEqual(["first_leap", "chudamani"]);
+    expect(merged.hinted).toBe(true);
+  });
+
+  it("merges chapter stats by index, including a shorter list", () => {
+    const merged = mergeSaves(
+      progress({ stats: { ...DEFAULT_STATS, chapters: [{ clears: 3, deaths: 1 }] } }),
+      progress({
+        stats: {
+          ...DEFAULT_STATS,
+          chapters: [
+            { clears: 1, deaths: 4 },
+            { clears: 2, deaths: 0 },
+          ],
+        },
+      }),
+    );
+    expect(merged.stats.chapters).toEqual([
+      { clears: 3, deaths: 4 },
+      { clears: 2, deaths: 0 },
+    ]);
+  });
+
+  it("takes the newer daily, and the higher score on the same day", () => {
+    const a = progress({ daily: { date: "2026-11-04", best: 10 } });
+    const b = progress({ daily: { date: "2026-11-03", best: 99 } });
+    expect(mergeSaves(a, b).daily).toEqual({ date: "2026-11-04", best: 10 });
+    expect(mergeSaves(b, a).daily).toEqual({ date: "2026-11-04", best: 10 });
+    const c = progress({ daily: { date: "2026-11-04", best: 30 } });
+    expect(mergeSaves(a, c).daily.best).toBe(30);
+  });
+
+  it("keeps this device's preferences", () => {
+    const merged = mergeSaves(progress({ lang: "hi", muted: true }), progress({ lang: "en" }));
+    expect(merged.lang).toBe("hi");
+    expect(merged.muted).toBe(true);
+  });
+});
+
+describe("parseSave", () => {
+  it("accepts a current save and rejects anything else", () => {
+    expect(parseSave(DEFAULT_SAVE)?.v).toBe(3);
+    expect(parseSave({ v: 1, best: 1, muted: false, unlockedChapter: 0 })).toBeNull();
+    expect(parseSave({ ...DEFAULT_SAVE, stats: { chapters: "x" } })).toBeNull();
+    expect(parseSave(null)).toBeNull();
   });
 });

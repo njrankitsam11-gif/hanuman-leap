@@ -41,6 +41,7 @@ import {
   WinScreen,
 } from "./game/Screens";
 import { SettingsSheet, type Settings } from "./game/SettingsSheet";
+import { eraseCloudSave, startCloudSync } from "@/lib/cloud-save";
 
 type GameState = "ready" | "intro" | "playing" | "chapterClear" | "over" | "won";
 
@@ -379,6 +380,7 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
 
   const eraseProgress = useCallback(() => {
     const next = resetProgress();
+    void eraseCloudSave();
     bestRef.current = 0;
     hintedRef.current = false;
     hintFlapsRef.current = 0;
@@ -424,6 +426,25 @@ export default function HanumanLeap({ initialChapter }: { initialChapter?: numbe
     setMusic(on ? chapterAt(chapter).id : null);
   }, [state, paused, chapter]);
   useEffect(() => () => setMusic(null), []);
+
+  // Progress that arrived from another device replaces what's on screen.
+  useEffect(
+    () =>
+      startCloudSync((save) => {
+        bestRef.current = save.best;
+        hintedRef.current = save.hinted;
+        setBest(save.best);
+        setUnlocked(save.unlockedChapter);
+        setStats(save.stats);
+        statsRef.current = save.stats;
+        setEndlessBest(save.endlessBest);
+        setDaily(save.daily);
+        achievedRef.current = new Set(save.achievements);
+        setAchievements(save.achievements);
+        setHinted(save.hinted);
+      }),
+    [],
+  );
 
   // Persisted values are read on the client only, after hydration.
   useEffect(() => {

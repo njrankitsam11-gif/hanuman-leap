@@ -45,6 +45,28 @@ empty localStorage at boot (Capacitor Preferences, see 06).
 | `endlessBest/daily`        | hit in the respective mode                                            |
 | `achievements`             | `award`                                                               |
 
+## Accounts and cloud save (`src/lib/cloud-save.ts`, `src/lib/cloud-save-server.ts`)
+
+Optional and web-only for now. localStorage stays the source the game reads; the cloud is a
+copy. Signed out, offline, or with no `VITE_NEON_AUTH_URL`, nothing changes for the player.
+
+- **Sign-in**: emailed code through Neon Managed Auth (`@neondatabase/auth`), loaded on demand.
+  UI is `AccountPanel` in the settings sheet. Local progress stays on sign-out.
+- **API**: `/api/save` GET/PUT/DELETE, `Authorization: Bearer <Neon JWT>`. A plain route rather
+  than a server function so the native shell can call it cross-origin later. Every query uses
+  the verified token's `sub`. Body cap 64 KB; `parseSave` rejects anything but a current save.
+- **Storage**: `game_saves(user_id, save jsonb, updated_at)`, `db/schema.sql`, applied by hand.
+- **Sync**: `onSaveWrite` schedules a PUT 5 s after a write; also on sign-in and `online`. The
+  server merges and returns the result; the client adopts it and tells the shell.
+- **`mergeSaves(local, remote)`**: progress takes the furthest value per field, achievements
+  union, newer daily, preferences stay `local`'s. Stats use max, not sum, so two devices never
+  inflate them (a little play on the behind device can go uncounted).
+- **Invariant**: merging can only grow progress, so "Reset progress" must DELETE the cloud row
+  first (`eraseCloudSave`) or the next sync restores everything. If that DELETE fails offline,
+  progress does come back.
+- **A second person signing in on the same device** merges this device's progress into their
+  account. Accepted for now.
+
 ## Achievements (`src/game/achievements.ts`)
 
 `ACHIEVEMENTS` (17, bilingual `title/desc`), `evaluate(ctx, unlockedSet) → AchievementId[]` — pure,
@@ -80,7 +102,7 @@ column sequence for the day (given the same orientation — spawn geometry depen
 `speedMul` differs, so portrait and landscape dailies are not identical; acceptable for a local best).
 
 Ghost replay / leaderboard verification (roadmap 8.7 / Phase 9) would log flap step indices and
-re-run `step` with the same seed and viewport — deferred until a backend exists.
+re-run `step` with the same seed and viewport — not built yet.
 
 ## Share (`src/game/share.ts`)
 
